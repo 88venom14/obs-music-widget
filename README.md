@@ -32,9 +32,7 @@ OBS Spotify Widget - это небольшой сайт для создания 
 
 1. Открыть сайт:
 
-   ```text
-   https://88venom14.github.io/obs-music-widget/
-   ```
+[ссылка на сайт](https://88venom14.github.io/obs-music-widget/)
 
 2. Выбрать источник: Spotify API или Last.fm.
 3. Заполнить нужные поля для выбранного источника.
