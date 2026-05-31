@@ -119,10 +119,34 @@
     });
 
     if (!response.ok) {
-      throw new Error(`Spotify token request failed with HTTP ${response.status}`);
+      throw await makeSpotifyError(response, "Spotify token request");
     }
 
     return response.json();
+  }
+
+  async function readSpotifyError(response) {
+    try {
+      const body = await response.clone().json();
+      return body?.error?.message || body?.error_description || "";
+    } catch (_jsonError) {
+      try {
+        return (await response.clone().text()).trim();
+      } catch (_textError) {
+        return "";
+      }
+    }
+  }
+
+  async function makeSpotifyError(response, area) {
+    const details = await readSpotifyError(response);
+    if (response.status === 403) {
+      return new Error(
+        `${area} вернул HTTP 403. Client secret для GitHub Pages не нужен. Проверьте в Spotify Developer Dashboard, что ваш Spotify аккаунт добавлен в Users and Access, app находится в доступном режиме, а затем выйдите и войдите заново.${details ? ` Spotify: ${details}` : ""}`
+      );
+    }
+
+    return new Error(`${area} failed with HTTP ${response.status}${details ? `: ${details}` : ""}`);
   }
 
   function saveAuth(auth) {
@@ -279,7 +303,7 @@
     }
 
     if (!response.ok) {
-      throw new Error(`Spotify currently-playing failed with HTTP ${response.status}`);
+      throw await makeSpotifyError(response, "Spotify currently-playing");
     }
 
     const playback = await response.json();
