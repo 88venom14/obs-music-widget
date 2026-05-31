@@ -428,7 +428,10 @@
         artist: (playback.item.artists || []).map((artist) => artist.name).filter(Boolean).join(", ") || "Unknown Artist",
         album: playback.item.album?.name || "",
         artUrl: images.find((image) => image.url)?.url || "",
-        trackUrl: playback.item.external_urls?.spotify || ""
+        trackUrl: playback.item.external_urls?.spotify || "",
+        durationMs: Number(playback.item.duration_ms || 0),
+        progressMs: Number(playback.progress_ms || 0),
+        sampledAt: Date.now()
       }
     };
   }
@@ -495,7 +498,14 @@
       widgetWidth: Number(controls.widgetWidth.value),
       widgetHeight: Number(controls.widgetHeight.value),
       widgetRadius: Number(controls.widgetRadius.value),
-      hideOnPause: controls.hideOnPause.checked
+      fontScale: Number(controls.fontScale.value),
+      progressHeight: Number(controls.progressHeight.value),
+      backdropBlur: Number(controls.backdropBlur.value),
+      hideOnPause: controls.hideOnPause.checked,
+      showArt: controls.showArt.checked,
+      showVisualizer: controls.showVisualizer.checked,
+      showProgress: controls.showProgress.checked,
+      showTime: controls.showTime.checked
     };
   }
 
@@ -508,6 +518,9 @@
     document.documentElement.style.setProperty("--widget-height", `${settings.widgetHeight}px`);
     document.documentElement.style.setProperty("--border-radius-widget", `${settings.widgetRadius}px`);
     document.documentElement.style.setProperty("--border-radius-art", `${Math.max(settings.widgetRadius - 4, 0)}px`);
+    document.documentElement.style.setProperty("--font-scale", String(settings.fontScale));
+    document.documentElement.style.setProperty("--progress-height", `${settings.progressHeight}px`);
+    document.documentElement.style.setProperty("--backdrop-blur", `${settings.backdropBlur}px`);
   }
 
   function setWidgetVisible(root, visible) {
@@ -535,7 +548,48 @@
     });
   }
 
+  function formatTime(ms) {
+    const totalSeconds = Math.max(Math.floor(Number(ms || 0) / 1000), 0);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  function getProgressMs(payload) {
+    const durationMs = Number(payload.track?.durationMs || 0);
+    if (!durationMs) {
+      return 0;
+    }
+
+    const sampledAt = Number(payload.track?.sampledAt || Date.now());
+    const baseProgress = Number(payload.track?.progressMs || 0);
+    const liveOffset = payload.state === "playing" ? Date.now() - sampledAt : 0;
+    return Math.min(Math.max(baseProgress + liveOffset, 0), durationMs);
+  }
+
+  function updateWidgetOptions(target, settings, payload) {
+    const hasProgress = Boolean(payload?.track?.durationMs);
+    target.root.classList.toggle("widget--no-art", !settings.showArt);
+    target.root.classList.toggle("widget--no-visualizer", !settings.showVisualizer);
+    target.root.classList.toggle("widget--no-progress", !settings.showProgress || !hasProgress);
+    target.root.classList.toggle("widget--no-time", !settings.showTime || !hasProgress);
+  }
+
+  function updateProgress(target, payload) {
+    if (!target.progressFill || !target.time || !payload.track?.durationMs) {
+      return;
+    }
+
+    const durationMs = Number(payload.track.durationMs);
+    const progressMs = getProgressMs(payload);
+    const percent = durationMs ? (progressMs / durationMs) * 100 : 0;
+    target.progressFill.style.width = `${Math.min(Math.max(percent, 0), 100)}%`;
+    target.time.textContent = `${formatTime(progressMs)} / ${formatTime(durationMs)}`;
+  }
+
   function renderWidget(target, payload, settings, trackKeyName) {
+    updateWidgetOptions(target, settings, payload);
+
     if (payload.state === "unchanged") {
       return;
     }
@@ -562,9 +616,12 @@
         target.artist.textContent = payload.track.artist;
         updateMarquee(target.title, target.titleWrapper);
         updateMarquee(target.artist, target.artistWrapper);
+        updateProgress(target, payload);
         target.info.classList.remove("fading");
         target.artContainer.classList.remove("fading");
       }, 180);
+    } else {
+      updateProgress(target, payload);
     }
 
     setWidgetVisible(target.root, true);
@@ -580,7 +637,10 @@
           title: "Midnight City",
           artist: "M83",
           album: "Hurry Up, We're Dreaming",
-          artUrl: ""
+          artUrl: "",
+          durationMs: 244000,
+          progressMs: 78000,
+          sampledAt: Date.now()
         }
       },
       getSettings(),
@@ -807,7 +867,14 @@
     controls.widgetWidth = document.getElementById("widget-width");
     controls.widgetHeight = document.getElementById("widget-height");
     controls.widgetRadius = document.getElementById("widget-radius");
+    controls.fontScale = document.getElementById("font-scale");
+    controls.progressHeight = document.getElementById("progress-height");
+    controls.backdropBlur = document.getElementById("backdrop-blur");
     controls.hideOnPause = document.getElementById("hide-on-pause");
+    controls.showArt = document.getElementById("show-art");
+    controls.showVisualizer = document.getElementById("show-visualizer");
+    controls.showProgress = document.getElementById("show-progress");
+    controls.showTime = document.getElementById("show-time");
     controls.widgetUrl = document.getElementById("widget-url");
     controls.copyUrl = document.getElementById("copy-url");
     controls.refreshPreview = document.getElementById("refresh-preview");
@@ -821,6 +888,8 @@
     preview.titleWrapper = preview.root.querySelector(".track-title-wrapper");
     preview.artistWrapper = preview.root.querySelector(".track-artist-wrapper");
     preview.visualizer = document.getElementById("preview-visualizer");
+    preview.progressFill = document.getElementById("preview-progress-fill");
+    preview.time = document.getElementById("preview-time");
     preview.art.addEventListener("error", () => {
       if (preview.art.src !== PLACEHOLDER_ART) {
         preview.art.src = PLACEHOLDER_ART;
@@ -909,7 +978,14 @@
       controls.widgetWidth,
       controls.widgetHeight,
       controls.widgetRadius,
-      controls.hideOnPause
+      controls.fontScale,
+      controls.progressHeight,
+      controls.backdropBlur,
+      controls.hideOnPause,
+      controls.showArt,
+      controls.showVisualizer,
+      controls.showProgress,
+      controls.showTime
     ]) {
       input.addEventListener("input", () => {
         applySettings(getSettings());
@@ -928,6 +1004,8 @@
     widget.titleWrapper = widget.root.querySelector(".track-title-wrapper");
     widget.artistWrapper = widget.root.querySelector(".track-artist-wrapper");
     widget.visualizer = document.getElementById("visualizer");
+    widget.progressFill = document.getElementById("progress-fill");
+    widget.time = document.getElementById("track-time");
     widget.art.addEventListener("error", () => {
       if (widget.art.src !== PLACEHOLDER_ART) {
         widget.art.src = PLACEHOLDER_ART;

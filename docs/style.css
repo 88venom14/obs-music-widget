@@ -14,6 +14,9 @@
   --border-radius-widget: 14px;
   --widget-width: 420px;
   --widget-height: 90px;
+  --font-scale: 1;
+  --progress-height: 4px;
+  --backdrop-blur: 16px;
   --marquee-offset: 0px;
 }
 
@@ -283,6 +286,12 @@ h2 {
   color: var(--body-text);
 }
 
+.toggle-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 12px;
+}
+
 #widget-url {
   width: 100%;
   resize: vertical;
@@ -334,9 +343,30 @@ body.widget-mode {
   background: var(--bg-color);
   border-radius: var(--border-radius-widget);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.24);
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(var(--backdrop-blur));
   opacity: 0;
   transform: translateY(10px);
+}
+
+.widget--no-art {
+  grid-template-columns: minmax(0, 1fr) 28px;
+  padding-left: 14px;
+}
+
+.widget--no-visualizer {
+  grid-template-columns: 66px minmax(0, 1fr);
+  padding-right: 14px;
+}
+
+.widget--no-art.widget--no-visualizer {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.widget--no-art .art-container,
+.widget--no-visualizer .visualizer,
+.widget--no-progress .progress-row,
+.widget--no-time .time-label {
+  display: none;
 }
 
 .widget--hidden {
@@ -384,7 +414,7 @@ body.widget-mode {
 }
 
 .track-title {
-  font-size: 20px;
+  font-size: calc(20px * var(--font-scale));
   font-weight: 700;
   line-height: 1.18;
   color: var(--text-main-color);
@@ -392,10 +422,41 @@ body.widget-mode {
 
 .track-artist {
   margin-top: 6px;
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   font-weight: 500;
   line-height: 1.25;
   color: var(--text-muted-color);
+}
+
+.progress-row {
+  margin-top: 7px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-track {
+  height: var(--progress-height);
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.progress-fill {
+  width: 0%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent-color);
+  transition: width 0.45s linear;
+}
+
+.time-label {
+  color: var(--text-muted-color);
+  font-size: calc(11px * var(--font-scale));
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .is-marquee {
@@ -511,6 +572,10 @@ body.widget-mode {
   }
 
   .source-switch {
+    grid-template-columns: 1fr;
+  }
+
+  .toggle-grid {
     grid-template-columns: 1fr;
   }
 }

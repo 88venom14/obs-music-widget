@@ -115,6 +115,12 @@
                 <div class="track-artist-wrapper">
                   <span id="preview-artist" class="track-artist">Текущий трек появится здесь</span>
                 </div>
+                <div class="progress-row">
+                  <div class="progress-track" aria-hidden="true">
+                    <div id="preview-progress-fill" class="progress-fill"></div>
+                  </div>
+                  <span id="preview-time" class="time-label">0:00 / 0:00</span>
+                </div>
               </div>
               <div class="visualizer paused" id="preview-visualizer" aria-hidden="true">
                 <span class="bar"></span>
@@ -163,12 +169,42 @@
               <span>Скругление</span>
               <input id="widget-radius" type="number" min="0" max="40" step="1" value="14" />
             </label>
+            <label>
+              <span>Размер текста</span>
+              <input id="font-scale" type="range" min="0.8" max="1.3" step="0.05" value="1" />
+            </label>
+            <label>
+              <span>Высота прогресса</span>
+              <input id="progress-height" type="range" min="2" max="10" step="1" value="4" />
+            </label>
+            <label>
+              <span>Размытие фона</span>
+              <input id="backdrop-blur" type="range" min="0" max="24" step="1" value="16" />
+            </label>
           </div>
 
           <label class="toggle-row">
             <input id="hide-on-pause" type="checkbox" checked />
             <span>Скрывать виджет на паузе</span>
           </label>
+          <div class="toggle-grid">
+            <label class="toggle-row">
+              <input id="show-art" type="checkbox" checked />
+              <span>Показывать обложку</span>
+            </label>
+            <label class="toggle-row">
+              <input id="show-visualizer" type="checkbox" checked />
+              <span>Показывать визуалайзер</span>
+            </label>
+            <label class="toggle-row">
+              <input id="show-progress" type="checkbox" checked />
+              <span>Показывать прогресс трека</span>
+            </label>
+            <label class="toggle-row">
+              <input id="show-time" type="checkbox" checked />
+              <span>Показывать время трека</span>
+            </label>
+          </div>
         </div>
 
         <div class="section-block">
@@ -194,6 +230,12 @@
           </div>
           <div class="track-artist-wrapper">
             <span id="track-artist" class="track-artist"></span>
+          </div>
+          <div class="progress-row">
+            <div class="progress-track" aria-hidden="true">
+              <div id="progress-fill" class="progress-fill"></div>
+            </div>
+            <span id="track-time" class="time-label">0:00 / 0:00</span>
           </div>
         </div>
         <div class="visualizer paused" id="visualizer" aria-hidden="true">
