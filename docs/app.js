@@ -14,6 +14,7 @@
   const STATE_KEY = "obs_spotify_widget_oauth_state";
   const REDIRECT_KEY = "obs_spotify_widget_redirect_uri";
   const POLLING_INTERVAL_MS = 3000;
+  const LASTFM_FALLBACK_DURATION_MS = 180000;
   const PLACEHOLDER_ART =
     "data:image/svg+xml;charset=UTF-8," +
     encodeURIComponent(
@@ -29,7 +30,12 @@
     previewTimer: 0,
     widgetTimer: 0,
     previewNextPollAt: 0,
-    widgetNextPollAt: 0
+    widgetNextPollAt: 0,
+    lastfmDurationCache: {},
+    lastfmProgress: {
+      preview: { trackKey: "", startedAt: 0 },
+      widget: { trackKey: "", startedAt: 0 }
+    }
   };
 
   const controls = {};
@@ -436,7 +442,58 @@
     };
   }
 
-  async function fetchLastfmTrack(config) {
+  function lastfmCacheKey(artist, title) {
+    return `${artist.toLowerCase()}\u0000${title.toLowerCase()}`;
+  }
+
+  async function fetchLastfmDuration(config, artist, title) {
+    const cacheKey = lastfmCacheKey(artist, title);
+    if (state.lastfmDurationCache[cacheKey]) {
+      return state.lastfmDurationCache[cacheKey];
+    }
+
+    const url = new URL(LASTFM_ENDPOINT);
+    url.searchParams.set("method", "track.getInfo");
+    url.searchParams.set("artist", artist);
+    url.searchParams.set("track", title);
+    url.searchParams.set("api_key", config.apiKey);
+    url.searchParams.set("format", "json");
+    url.searchParams.set("autocorrect", "1");
+
+    try {
+      const response = await fetch(url.toString(), { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      const duration = Number(data?.track?.duration || 0);
+      state.lastfmDurationCache[cacheKey] = duration > 0 ? duration : LASTFM_FALLBACK_DURATION_MS;
+      return state.lastfmDurationCache[cacheKey];
+    } catch (_error) {
+      state.lastfmDurationCache[cacheKey] = LASTFM_FALLBACK_DURATION_MS;
+      return state.lastfmDurationCache[cacheKey];
+    }
+  }
+
+  function applyLastfmEstimatedProgress(payload, slotName) {
+    if (!payload.track?.durationMs) {
+      return payload;
+    }
+
+    const slot = state.lastfmProgress[slotName] || state.lastfmProgress.preview;
+    const trackKey = `${payload.track.title}\u0000${payload.track.artist}\u0000${payload.track.album}`;
+    if (slot.trackKey !== trackKey || !slot.startedAt) {
+      slot.trackKey = trackKey;
+      slot.startedAt = Date.now();
+    }
+
+    payload.track.progressMs = Math.min(Date.now() - slot.startedAt, payload.track.durationMs);
+    payload.track.sampledAt = Date.now();
+    return payload;
+  }
+
+  async function fetchLastfmTrack(config, slotName = "preview") {
     const url = new URL(LASTFM_ENDPOINT);
     url.searchParams.set("method", "user.getrecenttracks");
     url.searchParams.set("user", config.username);
@@ -457,27 +514,34 @@
     const rawTracks = data?.recenttracks?.track;
     const track = Array.isArray(rawTracks) ? rawTracks[0] : rawTracks;
     if (!track) {
+      state.lastfmProgress[slotName].trackKey = "";
       return { state: "stopped", track: null };
     }
 
     const isNowPlaying = track["@attr"]?.nowplaying === "true";
     if (!isNowPlaying) {
+      state.lastfmProgress[slotName].trackKey = "";
       return { state: "stopped", track: null };
     }
 
     const images = Array.isArray(track.image) ? track.image : [];
     const artUrl = [...images].reverse().find((image) => image?.["#text"])?.["#text"] || "";
+    const title = track.name || "Unknown Track";
+    const artist = track.artist?.["#text"] || track.artist?.name || "Unknown Artist";
+    const album = track.album?.["#text"] || "";
+    const durationMs = await fetchLastfmDuration(config, artist, title);
 
-    return {
+    return applyLastfmEstimatedProgress({
       state: "playing",
       track: {
-        title: track.name || "Unknown Track",
-        artist: track.artist?.["#text"] || track.artist?.name || "Unknown Artist",
-        album: track.album?.["#text"] || "",
+        title,
+        artist,
+        album,
         artUrl,
-        trackUrl: track.url || ""
+        trackUrl: track.url || "",
+        durationMs
       }
-    };
+    }, slotName);
   }
 
   function hexToRgba(hex, alpha) {
@@ -662,7 +726,7 @@
       }
 
       try {
-        const payload = await fetchLastfmTrack(state.lastfmConfig);
+        const payload = await fetchLastfmTrack(state.lastfmConfig, "preview");
         renderWidget(preview, payload, getSettings(), "previewTrackKey");
         hideWarning();
       } catch (error) {
@@ -796,7 +860,7 @@
 
       const tick = async () => {
         try {
-          const payload = await fetchLastfmTrack(data.lastfm);
+          const payload = await fetchLastfmTrack(data.lastfm, "widget");
           renderWidget(widget, payload, data.settings, "widgetTrackKey");
         } catch (error) {
           console.error("Last.fm widget polling failed.", error);

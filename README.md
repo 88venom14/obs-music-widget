@@ -84,7 +84,7 @@ Last.fm mode is the fallback for users who cannot use Spotify Web API because of
 9. Copy the generated OBS URL.
 10. Paste the URL into OBS Browser Source.
 
-Last.fm can lag behind Spotify by several seconds because it depends on scrobbling. If Last.fm does not report a `nowplaying` track, the widget hides itself.
+Last.fm can lag behind Spotify by several seconds because it depends on scrobbling. Progress in Last.fm mode is estimated: the widget asks Last.fm for track duration and starts counting from the moment it first sees the `nowplaying` track. If Last.fm does not know the duration, the widget uses a 3:00 fallback. If Last.fm does not report a `nowplaying` track, the widget hides itself.
 
 ## User Instructions
 
