@@ -640,7 +640,7 @@
   }
 
   function updateProgress(target, payload) {
-    if (!target.progressFill || !target.time || !payload.track?.durationMs) {
+    if (!target.progressFill || !target.time || !payload.track?.durationMs || !target.lastSettings) {
       return;
     }
 
@@ -649,10 +649,30 @@
     const percent = durationMs ? (progressMs / durationMs) * 100 : 0;
     target.progressFill.style.width = `${Math.min(Math.max(percent, 0), 100)}%`;
     target.time.textContent = `${formatTime(progressMs)} / ${formatTime(durationMs)}`;
+    target.progressFill.style.display = target.lastSettings.showProgress ? "" : "none";
+    target.time.style.display = target.lastSettings.showTime ? "" : "none";
+  }
+
+  function ensureProgressTicker(target) {
+    if (target.progressTimer) {
+      return;
+    }
+
+    target.progressTimer = window.setInterval(() => {
+      if (!target.lastPayload || !target.lastSettings) {
+        return;
+      }
+
+      updateWidgetOptions(target, target.lastSettings, target.lastPayload);
+      updateProgress(target, target.lastPayload);
+    }, 1000);
   }
 
   function renderWidget(target, payload, settings, trackKeyName) {
     updateWidgetOptions(target, settings, payload);
+    target.lastPayload = payload;
+    target.lastSettings = settings;
+    ensureProgressTicker(target);
 
     if (payload.state === "unchanged") {
       return;

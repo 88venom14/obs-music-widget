@@ -448,7 +448,7 @@ body.widget-mode {
   height: 100%;
   border-radius: inherit;
   background: var(--accent-color);
-  transition: width 0.45s linear;
+  transition: width 1s linear;
 }
 
 .time-label {
