@@ -22,6 +22,35 @@
 
           <div id="setup-warning" class="warning hidden"></div>
 
+          <div class="client-id-box">
+            <label class="field-row">
+              <span>Spotify Client ID</span>
+              <input id="spotify-client-id" type="text" autocomplete="off" spellcheck="false" placeholder="Вставьте Client ID из Spotify Developer Dashboard" />
+            </label>
+            <div class="actions-row compact-actions">
+              <button id="save-client-id" class="secondary-button" type="button">Сохранить Client ID</button>
+            </div>
+
+            <label class="field-row">
+              <span>Redirect URI для Spotify app</span>
+              <input id="redirect-uri" type="text" readonly spellcheck="false" />
+            </label>
+            <div class="actions-row compact-actions">
+              <button id="copy-redirect-uri" class="secondary-button" type="button">Скопировать Redirect URI</button>
+            </div>
+
+            <details class="setup-guide">
+              <summary>Где взять Client ID</summary>
+              <ol>
+                <li>Откройте Spotify Developer Dashboard.</li>
+                <li>Создайте app и выберите Web API.</li>
+                <li>Добавьте Redirect URI, показанный выше.</li>
+                <li>Скопируйте Client ID из настроек app и вставьте сюда.</li>
+                <li>Client Secret не вставляйте и никому не отправляйте.</li>
+              </ol>
+            </details>
+          </div>
+
           <div class="actions-row auth-actions">
             <button id="spotify-login" class="primary-button" type="button">Войти через Spotify</button>
             <button id="spotify-logout" class="secondary-button" type="button">Сбросить доступ</button>

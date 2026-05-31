@@ -6,6 +6,7 @@
   const CURRENTLY_PLAYING_ENDPOINT = "https://api.spotify.com/v1/me/player/currently-playing?additional_types=track";
   const SCOPE = "user-read-currently-playing";
   const STORAGE_KEY = "obs_spotify_widget_auth";
+  const CLIENT_ID_STORAGE_KEY = "obs_spotify_widget_client_id";
   const VERIFIER_KEY = "obs_spotify_widget_pkce_verifier";
   const STATE_KEY = "obs_spotify_widget_oauth_state";
   const REDIRECT_KEY = "obs_spotify_widget_redirect_uri";
@@ -30,13 +31,24 @@
   const preview = {};
   const widget = {};
 
-  function getClientId() {
+  function getSiteClientId() {
     return String(SITE_CONFIG.spotifyClientId || "").trim();
   }
 
+  function getStoredClientId() {
+    return String(localStorage.getItem(CLIENT_ID_STORAGE_KEY) || "").trim();
+  }
+
+  function getClientId() {
+    return getStoredClientId() || getSiteClientId();
+  }
+
+  function isUsableClientId(clientId) {
+    return Boolean(clientId) && clientId !== CLIENT_ID_PLACEHOLDER;
+  }
+
   function isClientConfigured() {
-    const clientId = getClientId();
-    return clientId && clientId !== CLIENT_ID_PLACEHOLDER;
+    return isUsableClientId(getClientId());
   }
 
   function getRedirectUri() {
@@ -84,7 +96,7 @@
 
   async function beginSpotifyLogin() {
     if (!isClientConfigured()) {
-      showWarning("В docs/site-config.js нужно указать spotifyClientId из Spotify Developer Dashboard.");
+      showWarning("Сначала вставьте свой Spotify Client ID и добавьте показанный Redirect URI в настройки Spotify app.");
       return;
     }
 
@@ -142,7 +154,7 @@
     const details = await readSpotifyError(response);
     if (response.status === 403) {
       return new Error(
-        `${area} вернул HTTP 403. Client secret для GitHub Pages не нужен. Проверьте в Spotify Developer Dashboard, что ваш Spotify аккаунт добавлен в Users and Access, app находится в доступном режиме, а затем выйдите и войдите заново.${details ? ` Spotify: ${details}` : ""}`
+        `${area} вернул HTTP 403. Client secret для GitHub Pages не нужен. Если вы используете свой Client ID, проверьте, что аккаунт владельца Spotify app имеет Premium, Redirect URI добавлен точно, а затем выйдите и войдите заново.${details ? ` Spotify: ${details}` : ""}`
       );
     }
 
@@ -158,7 +170,7 @@
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       const auth = raw ? JSON.parse(raw) : null;
-      if (auth?.clientId && isClientConfigured() && auth.clientId !== getClientId()) {
+      if (auth?.clientId && (!isClientConfigured() || auth.clientId !== getClientId())) {
         localStorage.removeItem(STORAGE_KEY);
         return null;
       }
@@ -181,6 +193,32 @@
 
     const retryAt = Date.parse(retryAfter);
     return Number.isNaN(retryAt) ? POLLING_INTERVAL_MS : Math.max(retryAt - Date.now(), POLLING_INTERVAL_MS);
+  }
+
+  function resetAuth() {
+    localStorage.removeItem(STORAGE_KEY);
+    state.previewAuth = null;
+    state.previewTrackKey = "";
+  }
+
+  function saveUserClientId() {
+    const clientId = controls.clientIdInput.value.trim();
+    if (!isUsableClientId(clientId)) {
+      showWarning("Вставьте Client ID из Spotify Developer Dashboard. Client Secret сюда не нужен.");
+      return;
+    }
+
+    const previousClientId = getClientId();
+    localStorage.setItem(CLIENT_ID_STORAGE_KEY, clientId);
+
+    if (previousClientId !== clientId) {
+      resetAuth();
+    }
+
+    controls.clientIdInput.value = clientId;
+    updateAuthUi();
+    updateWidgetUrl();
+    hideWarning();
   }
 
   async function handleAuthCallback() {
@@ -479,7 +517,7 @@
 
     const auth = state.previewAuth;
     if (!auth?.refreshToken) {
-      controls.widgetUrl.value = "Сначала войдите через Spotify.";
+      controls.widgetUrl.value = isClientConfigured() ? "Сначала войдите через Spotify." : "Сначала вставьте Spotify Client ID.";
       controls.copyUrl.disabled = true;
       return;
     }
@@ -499,6 +537,7 @@
     const connected = Boolean(state.previewAuth?.refreshToken);
     controls.authStatus.textContent = connected ? "Spotify подключен" : "Не подключено";
     controls.authStatus.classList.toggle("connected", connected);
+    controls.login.disabled = !isClientConfigured();
     controls.logout.disabled = !connected;
   }
 
@@ -571,6 +610,10 @@
   function bindDashboard() {
     controls.authStatus = document.getElementById("auth-status");
     controls.warning = document.getElementById("setup-warning");
+    controls.clientIdInput = document.getElementById("spotify-client-id");
+    controls.saveClientId = document.getElementById("save-client-id");
+    controls.redirectUri = document.getElementById("redirect-uri");
+    controls.copyRedirectUri = document.getElementById("copy-redirect-uri");
     controls.login = document.getElementById("spotify-login");
     controls.logout = document.getElementById("spotify-logout");
     controls.bgColor = document.getElementById("bg-color");
@@ -601,10 +644,39 @@
       }
     });
 
+    controls.clientIdInput.value = getStoredClientId() || (isUsableClientId(getSiteClientId()) ? getSiteClientId() : "");
+    controls.redirectUri.value = getRedirectUri();
+
+    controls.saveClientId.addEventListener("click", saveUserClientId);
+    controls.clientIdInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        saveUserClientId();
+      }
+    });
+    controls.copyRedirectUri.addEventListener("click", async () => {
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(controls.redirectUri.value);
+        } else {
+          controls.redirectUri.focus();
+          controls.redirectUri.select();
+          document.execCommand("copy");
+        }
+        controls.copyRedirectUri.textContent = "Скопировано";
+        window.setTimeout(() => {
+          controls.copyRedirectUri.textContent = "Скопировать Redirect URI";
+        }, 1400);
+      } catch (_error) {
+        controls.redirectUri.focus();
+        controls.redirectUri.select();
+        showWarning("Не удалось скопировать автоматически. Скопируйте выделенный Redirect URI вручную.");
+      }
+    });
+
     controls.login.addEventListener("click", beginSpotifyLogin);
     controls.logout.addEventListener("click", () => {
-      localStorage.removeItem(STORAGE_KEY);
-      state.previewAuth = null;
+      resetAuth();
       updateAuthUi();
       updateWidgetUrl();
       renderMockPreview();
@@ -671,7 +743,7 @@
     bindDashboard();
 
     if (!isClientConfigured()) {
-      showWarning("Разработчику нужно указать Spotify Client ID в docs/site-config.js и добавить URL сайта в Redirect URIs Spotify app.");
+      showWarning("Вставьте свой Spotify Client ID и добавьте показанный Redirect URI в настройки Spotify app.");
     }
 
     await handleAuthCallback();

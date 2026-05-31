@@ -5,41 +5,48 @@ Static GitHub Pages site for creating a Spotify-powered OBS Browser Source widge
 The end-user flow is:
 
 1. Open the website.
-2. Sign in with Spotify.
-3. Customize the widget and preview it.
-4. Copy the generated OBS URL.
-5. Paste that URL into OBS Browser Source.
+2. Create a personal Spotify app and copy its Client ID.
+3. Paste the Client ID into the website.
+4. Sign in with Spotify.
+5. Customize the widget and preview it.
+6. Copy the generated OBS URL.
+7. Paste that URL into OBS Browser Source.
 
 No local server is required for viewers or streamers.
 
 ## Deploy To GitHub Pages
 
-1. Create a Spotify app at https://developer.spotify.com/dashboard.
-2. In the Spotify app settings, add your GitHub Pages URL as a Redirect URI.
+1. Push the repository to GitHub.
+2. Publish the `docs/` site. This repository uses `.github/workflows/pages.yml` to publish `docs/` to the `gh-pages` branch.
+3. In repository settings, enable GitHub Pages from the `gh-pages` branch.
 
-   Example:
+## User Spotify Setup
+
+Spotify restricts apps in Development Mode. To avoid the site owner manually adding every user, each streamer should use their own Spotify Client ID.
+
+1. Open https://developer.spotify.com/dashboard.
+2. Sign in with the Spotify account that will be used with OBS.
+3. Create an app.
+4. Select **Web API**.
+5. Add the exact Redirect URI shown on the deployed widget website.
+
+   For this deployment:
 
    ```text
-   https://yourname.github.io/obs-music-widget/
+   https://88venom14.github.io/obs-music-widget/
    ```
 
-3. Put the Spotify Client ID in [docs/site-config.js](./docs/site-config.js):
+6. Save the Spotify app.
+7. Copy **Client ID** from the app settings.
+8. Do not copy or share **Client Secret**. It is not used by this GitHub Pages app.
+9. Paste Client ID into the deployed widget website and save it.
+10. Sign in with Spotify.
 
-   ```js
-   window.OBS_SPOTIFY_WIDGET_CONFIG = {
-     spotifyClientId: "your_spotify_client_id",
-     appName: "OBS Spotify Widget"
-   };
-   ```
-
-4. In GitHub repository settings, enable Pages from the `docs/` folder.
-
-   This repository also includes a GitHub Actions workflow at `.github/workflows/pages.yml`.
-   If you use Actions-based Pages deployment, set Pages source to **GitHub Actions** and push to `main`.
+Spotify can return HTTP 403 if the owner of the Spotify app does not have an active Premium subscription. After Premium status changes, Spotify may take a few hours before API requests are allowed.
 
 ## User Instructions
 
-The user opens the deployed site and clicks **Войти через Spotify**.
+The user opens the deployed site, pastes their Spotify Client ID, and clicks **Войти через Spotify**.
 
 After Spotify authorization, the site stores the user's refresh token in browser local storage and generates an OBS URL. The URL contains the token in the fragment part after `#`, so it is not sent to GitHub Pages. The user should still keep the URL private because anyone with it can read their current Spotify playback.
 

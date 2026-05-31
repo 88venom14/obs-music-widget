@@ -7,11 +7,12 @@ This document is for the next AI/chat session. It explains what this project is,
 The project is now intended to be a **static GitHub Pages website** where an end user can:
 
 1. Open the website.
-2. Sign in with Spotify.
-3. Preview the OBS music widget.
-4. Customize widget appearance.
-5. Copy a generated OBS Browser Source URL.
-6. Paste that URL into OBS.
+2. Paste their own Spotify Client ID.
+3. Sign in with Spotify.
+4. Preview the OBS music widget.
+5. Customize widget appearance.
+6. Copy a generated OBS Browser Source URL.
+7. Paste that URL into OBS.
 
 The end user should **not** need to run Node.js locally.
 
@@ -22,7 +23,8 @@ GitHub Pages is static hosting. There is no backend, no server-side session, and
 Because of that, the GitHub Pages app uses **Spotify Authorization Code with PKCE**:
 
 - No `client_secret` in browser code.
-- The site owner exposes only a Spotify Client ID.
+- The site owner can leave `docs/site-config.js` as a placeholder.
+- Each user can paste their own Spotify Client ID, which is stored in browser localStorage.
 - The user authorizes through Spotify.
 - The browser receives and stores the user's Spotify refresh token.
 - The generated OBS URL contains the refresh token in the URL fragment after `#`.
@@ -42,16 +44,16 @@ GitHub Pages should be configured to deploy from the `docs/` folder.
 
 ### `docs/site-config.js`
 
-Before deployment, the developer must set:
+The file can provide a default Client ID, but for public use it is intentionally left as:
 
 ```js
 window.OBS_SPOTIFY_WIDGET_CONFIG = {
-  spotifyClientId: "your_spotify_client_id",
+  spotifyClientId: "PUT_YOUR_SPOTIFY_CLIENT_ID_HERE",
   appName: "OBS Spotify Widget"
 };
 ```
 
-The Spotify app dashboard must include the deployed GitHub Pages URL as an exact Redirect URI.
+Users paste their own Client ID into the UI. Each user's Spotify app dashboard must include the deployed GitHub Pages URL as an exact Redirect URI.
 
 Example:
 
@@ -73,6 +75,7 @@ https://yourname.github.io/obs-music-widget/
 
 Responsibilities:
 
+- Store the user's Spotify Client ID in localStorage.
 - Start Spotify OAuth PKCE login.
 - Store auth data in browser localStorage.
 - Show live/mock preview.
