@@ -1,229 +1,260 @@
-# AI Handoff: OBS Spotify Widget
+# AI Handoff: OBS Music Widget
 
-This document is for the next AI/chat session. It explains what this project is, what was already built, and what constraints matter.
+This document is a project map for future AI sessions. It describes what the project is, where the main pieces are, and how they fit together.
 
-## Current Product Goal
+## Product
 
-The project is now intended to be a **static GitHub Pages website** where an end user can:
+This repository contains an OBS browser-source music widget and a static setup/customization page.
 
-1. Open the website.
-2. Choose Spotify API or Last.fm as the source.
-3. Fill the source settings.
-4. Preview the OBS music widget.
-5. Customize widget appearance.
-6. Copy a generated OBS Browser Source URL.
+The primary user flow is:
+
+1. Open the static setup page.
+2. Choose Spotify API or Last.fm as the track source.
+3. Configure the source.
+4. Preview the widget.
+5. Customize the widget appearance.
+6. Copy the generated OBS Browser Source URL.
 7. Paste that URL into OBS.
 
-The end user should **not** need to run Node.js locally.
+The static app is designed to work on GitHub Pages without a backend.
 
-## Important Architecture Decision
+## Directory Map
 
-GitHub Pages is static hosting. There is no backend, no server-side session, and no safe place to store a Spotify client secret.
+- `docs/`: GitHub Pages app. This is the main user-facing app.
+- `public/`: local-server OBS widget files used by the Node backend.
+- `src/`: local Node/TypeScript backend and Spotify helpers.
+- `tests/`: Node test suite.
+- `dist/`: TypeScript build output.
+- `AI_HANDOFF.md`: project map for AI agents.
+- `README.md`: user/developer documentation.
+- `package.json`: npm scripts and dependencies.
+- `config.json`: local backend configuration.
 
-Because of that, the GitHub Pages app uses **Spotify Authorization Code with PKCE**:
+## GitHub Pages App
 
-- No `client_secret` in browser code.
-- The site owner can leave `docs/site-config.js` as a placeholder.
-- Each user can paste their own Spotify Client ID, which is stored in browser localStorage.
-- The user authorizes through Spotify.
-- The browser receives and stores the user's Spotify refresh token.
-- The generated OBS URL contains the refresh token in the URL fragment after `#`.
+Main files:
 
-The URL fragment is not sent to GitHub Pages, but it is still sensitive. The generated OBS URL must be treated as private.
+- `docs/index.html`: dashboard markup and hidden widget-mode markup.
+- `docs/style.css`: dashboard CSS and GitHub Pages widget CSS.
+- `docs/app.js`: app runtime, source integrations, preview, customization, OBS URL generation, widget-mode polling.
+- `docs/site-config.js`: optional deployment config for a default Spotify Client ID.
+- `docs/adoforsite.webp`: dashboard background image.
+- `docs/favicon.png`: favicon used by the static page.
 
-## Main Static App
+GitHub Pages should deploy from the `docs/` directory.
 
-The GitHub Pages app lives in:
+## App Modes
 
-- `docs/index.html`
-- `docs/style.css`
-- `docs/app.js`
-- `docs/site-config.js`
+`docs/index.html` runs in two modes.
 
-GitHub Pages should be configured to deploy from the `docs/` folder.
+Dashboard mode:
 
-### `docs/site-config.js`
+- Normal URL without `?widget=1`.
+- Shows setup, source selector, preview, customization controls, and OBS URL output.
+- Stores settings/source credentials in browser storage where needed.
+- Generates the final OBS URL.
 
-The file can provide a default Client ID, but for public use it is intentionally left as:
+Widget mode:
 
-```js
-window.OBS_SPOTIFY_WIDGET_CONFIG = {
-  spotifyClientId: "PUT_YOUR_SPOTIFY_CLIENT_ID_HERE",
-  appName: "OBS Spotify Widget"
-};
-```
-
-Users paste their own Client ID into the UI. Each user's Spotify app dashboard must include the deployed GitHub Pages URL as an exact Redirect URI.
-
-Example:
-
-```text
-https://yourname.github.io/obs-music-widget/
-```
-
-## Static App Modes
-
-The same `docs/index.html` runs in two modes.
-
-### Dashboard Mode
-
-Default URL:
-
-```text
-https://yourname.github.io/obs-music-widget/
-```
-
-Responsibilities:
-
-- Let the user switch between Spotify API and Last.fm.
-- Store the user's Spotify Client ID in localStorage.
-- Store Last.fm username/API key in localStorage when Last.fm mode is selected.
-- Start Spotify OAuth PKCE login.
-- Store auth data in browser localStorage.
-- Show live/mock preview.
-- Let the user customize:
-  - background color
-  - background opacity
-  - main text color
-  - muted text color
-  - accent color
-  - widget width
-  - widget height
-  - border radius
-  - hide-on-pause behavior
-- Generate OBS Browser Source URL.
-- Copy URL to clipboard.
-
-### Widget Mode
+- URL contains `?widget=1#data=...`.
+- Hides the dashboard and renders only the widget.
+- Reads config from the `#data` fragment.
+- Polls Spotify or Last.fm directly from the OBS browser source.
 
 Generated URL shape:
 
 ```text
-https://yourname.github.io/obs-music-widget/?widget=1#data=...
+https://example.github.io/obs-music-widget/?widget=1#data=...
 ```
 
-Responsibilities:
+The fragment data can contain tokens or API keys. Treat generated OBS URLs as private.
 
-- Parse `#data`.
-- Apply saved theme/customization.
-- Refresh Spotify access tokens directly in the OBS browser source.
-- Poll Spotify currently-playing API.
-- Render only the transparent widget UI.
+## Sources
 
-## Spotify API Flow
+Spotify:
 
-Dashboard login:
-
-1. Generate PKCE verifier and challenge.
-2. Redirect to `https://accounts.spotify.com/authorize`.
-3. Use scope:
-
-   ```text
-   user-read-currently-playing
-   ```
-
-4. On callback, exchange `code` for tokens at:
-
-   ```text
-   https://accounts.spotify.com/api/token
-   ```
-
-5. Store `refresh_token` in localStorage.
-
-Widget polling:
-
-1. Use `refresh_token` and Client ID to get an access token.
-2. Poll:
-
-   ```text
-   https://api.spotify.com/v1/me/player/currently-playing?additional_types=track
-   ```
-
-3. Render:
-   - `playing`: show widget, animate visualizer.
-   - `paused`: either hide widget or show frozen visualizer depending on setting.
-   - `stopped` / `204`: hide widget.
-   - `429` or transient errors: keep prior UI state.
-
-## Legacy Local Node Backend
-
-There is still a local Node/TypeScript backend in:
-
-- `src/server.ts`
-- `src/spotify.ts`
-- `src/types.ts`
-- `src/logger.ts`
-
-It was built during an earlier local-server version of the project. The current user-facing direction is GitHub Pages/static-first, but the backend still compiles and tests pass.
-
-Do not assume the Node backend is the main product unless the user explicitly asks for local/server deployment.
-
-## Tests And Checks
-
-Run from:
+- Uses Authorization Code with PKCE in the static frontend.
+- Does not use or store a Spotify client secret.
+- User provides Spotify Client ID.
+- Scope: `user-read-currently-playing`.
+- Token and source data are stored client-side.
+- Current playback endpoint:
 
 ```text
-C:\project\obs-wig-spot\obs-music-widget
+https://api.spotify.com/v1/me/player/currently-playing?additional_types=track
 ```
 
-Commands:
+Last.fm:
+
+- Uses Last.fm username and API key.
+- Polls recent tracks.
+- Fetches track duration through `track.getInfo`.
+- Falls back to 3 minutes when duration is missing.
+
+## Dashboard UI
+
+The dashboard is a practical setup/customization tool, not a landing page.
+
+Visual structure:
+
+- Left column: source setup and preview.
+- Middle column: customization controls.
+- Right/output column: custom CSS and OBS URL.
+
+Background:
+
+- The page background image is `docs/adoforsite.webp`.
+- It is applied in `docs/style.css` on `body`.
+- It should stay on the setup page background only.
+- The image should not be added to the widget itself.
+
+Transparency:
+
+- Dashboard panels and form controls are semi-transparent so the background image remains visible.
+- Main CSS variables:
+
+```css
+--panel-bg: rgba(16, 17, 34, 0.38);
+--field-bg: rgba(9, 11, 24, 0.44);
+--field-bg-muted: rgba(14, 17, 34, 0.4);
+```
+
+## Widget UI
+
+The widget should remain user-customizable.
+
+Important rules:
+
+- Do not put the dashboard background image inside the widget.
+- Do not add glow effects to widget elements unless explicitly requested.
+- Do not force the widget palette to match the page background.
+
+The GitHub Pages widget style in `docs/style.css` is controlled by CSS variables, including:
+
+- `--bg-color`
+- `--text-main-color`
+- `--text-muted-color`
+- `--accent-color`
+- `--font-family-widget`
+- `--text-align-widget`
+- `--widget-width`
+- `--widget-height`
+- `--art-size`
+- `--widget-padding-y`
+- `--widget-padding-x`
+- `--widget-gap`
+- `--title-size`
+- `--artist-size`
+- `--progress-height`
+- `--progress-bg-color`
+- `--backdrop-blur`
+- `--shadow-opacity`
+- `--shadow-blur`
+- `--border-width`
+- `--border-color`
+- `--visualizer-height`
+- `--visualizer-bar-width`
+- `--visualizer-speed`
+- `--marquee-speed`
+
+These are applied by `applySettings()` in `docs/app.js`.
+
+Widget sizing:
+
+- Width and height controls exist in the dashboard.
+- Internal controls such as art size, padding, gap, font sizes, progress, visualizer size, and border can increase the required widget size.
+- `getRecommendedWidgetSize(settings)` calculates the minimum recommended dimensions.
+- `syncWidgetSizeInputs(sourceInput)` increases width/height inputs when internal content would otherwise overflow.
+- The input handler in `bindDashboard()` calls `syncWidgetSizeInputs(input)` before applying settings.
+
+## Customization State
+
+Default dashboard/widget settings are in `DEFAULT_SETTINGS` in `docs/app.js`.
+
+The dashboard controls are wired in `bindDashboard()`:
+
+- Color and opacity controls.
+- Font family and text alignment.
+- Width, height, radius.
+- Art size, padding, gap.
+- Font scale, title size, artist size.
+- Progress height/background opacity.
+- Blur, shadow, border.
+- Visualizer height/bar width/speed.
+- Marquee speed and toggle.
+- Show/hide toggles for art, visualizer, progress, and time.
+- Custom CSS textarea.
+
+Custom CSS is stored in generated URL data and injected through `applyCustomCss()`.
+
+## Local Node Backend
+
+The local backend is separate from the static GitHub Pages flow.
+
+Files:
+
+- `src/server.ts`: HTTP server, local static serving, WebSocket server, local Spotify auth callback.
+- `src/spotify.ts`: Spotify API helpers and payload conversion.
+- `src/types.ts`: shared TypeScript types.
+- `src/logger.ts`: logging.
+- `public/index.html`: local widget HTML.
+- `public/style.css`: local widget CSS.
+- `public/app.js`: local widget browser script.
+
+`src/server.ts` serves files from `public/` and supports `.webp` MIME type.
+
+Use the backend only when the user wants local/server mode.
+
+## Local Widget Defaults
+
+`public/style.css` is the local backend widget style. It has simple defaults:
+
+- Transparent page.
+- Translucent dark widget background.
+- White main text.
+- Muted gray secondary text.
+- Orange accent.
+- No dashboard background image.
+- No extra glow effects.
+
+## Assets
+
+- `adoforsite.webp`: root copy of the dashboard background image.
+- `docs/adoforsite.webp`: active GitHub Pages dashboard background.
+- `public/adoforsite.webp`: available in public assets, not currently referenced by `public/style.css`.
+- `favicon.png`: root favicon candidate.
+- `docs/favicon.png`: favicon linked by `docs/index.html`.
+
+Do not delete or overwrite assets unless the user asks.
+
+## Commands
+
+Run from repository root:
 
 ```bash
+npm run site:check
 npm test
 npm run lint
 npm run build
+npm run dev
+npm run start
 ```
 
-Current state when this handoff was written:
+Script meanings:
 
-- `npm test`: passes.
-- `npm run lint`: passes.
-- `npm run build`: passes.
-- Static `docs/` HTTP smoke test passed with `Invoke-WebRequest`.
+- `npm run site:check`: syntax-checks `docs/app.js`.
+- `npm test`: runs `site:check` and Node tests in `tests/**/*.test.ts`.
+- `npm run lint`: TypeScript `--noEmit` check.
+- `npm run build`: cleans and compiles TypeScript into `dist/`.
+- `npm run dev`: runs local backend with `ts-node`.
+- `npm run start`: runs compiled backend from `dist/server.js`.
 
-`npm test` includes:
+## Working Rules
 
-- `node --check docs/app.js`
-- TypeScript Spotify tests in `tests/spotify.test.ts`
-
-## Browser Verification Note
-
-An attempt was made to use `browser-act` for real browser smoke testing. The CLI installed, but then blocked execution because its local skill metadata was stale/incompatible and requested a global skill update.
-
-Do not treat that as an app failure. The fallback static HTTP smoke test passed.
-
-If a future session wants full browser verification, either:
-
-- fix/update the global `browser-act` skill metadata intentionally, or
-- use another browser automation route approved by the user.
-
-## UI/Frontend Constraints
-
-Keep the GitHub Pages UI practical and tool-like:
-
-- First screen should be the actual setup/customization app, not a marketing landing page.
-- Keep OBS widget background transparent in widget mode.
-- Do not use heavy frameworks.
-- Do not require a backend for the user.
-- Do not introduce a Spotify client secret into static frontend code.
-- Generated OBS URLs are sensitive because they include refresh token data in the URL fragment.
-
-## Key Files
-
-- `README.md`: user/developer setup for GitHub Pages.
-- `AI_HANDOFF.md`: this file.
-- `docs/site-config.js`: deployment-time Spotify Client ID.
-- `docs/app.js`: PKCE, token refresh, preview, widget link generation, OBS widget polling.
-- `docs/style.css`: dashboard and widget styling.
-- `docs/index.html`: dashboard and widget DOM.
-- `tests/spotify.test.ts`: Node backend Spotify logic tests.
-- `package.json`: scripts, including `site:check`.
-
-## Likely Next Tasks
-
-Useful next improvements:
-
-- Add automated browser tests for `docs/` with Playwright or a fixed browser-act setup.
-- Add import/export of customization presets.
-- Add optional token revocation/help instructions for users who leak an OBS URL.
-- Consider a backend deployment option if the user later wants better token security than a static GitHub Pages app can provide.
+- Keep the static GitHub Pages app backend-free.
+- Do not put Spotify client secrets in frontend code.
+- Do not revert dirty work unless explicitly requested.
+- Use `apply_patch` for manual file edits.
+- Prefer `rg` for code search.
+- Keep UI changes consistent with the existing dashboard and widget separation.
+- Treat generated OBS URLs as sensitive because they may include tokens or API keys in the URL fragment.

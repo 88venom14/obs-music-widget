@@ -1,251 +1,359 @@
 <!doctype html>
 <html lang="ru">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>OBS Spotify Widget</title>
-    <link rel="stylesheet" href="./style.css" />
-    <script src="./site-config.js"></script>
-    <script src="./app.js" defer></script>
-  </head>
-  <body>
-    <main id="app-shell" class="app-shell">
-      <section class="setup-panel">
-        <div class="section-block">
-          <div class="brand-row">
-            <div>
-              <p class="eyebrow">OBS Browser Source</p>
-              <h1>Spotify Widget</h1>
-            </div>
-            <span id="auth-status" class="status-pill">Не подключено</span>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OBS Spotify Widget</title>
+  <link rel="icon" type="image/png" href="./favicon.png" />
+  <link rel="stylesheet" href="./style.css" />
+  <script src="./site-config.js"></script>
+  <script src="./app.js" defer></script>
+</head>
+
+<body>
+  <main id="app-shell" class="app-shell">
+    <section class="setup-panel">
+      <div class="section-block">
+        <div class="brand-row">
+          <div>
+            <h1>Spotify Widget</h1>
           </div>
+          <span id="auth-status" class="status-pill">Не подключено</span>
+        </div>
 
-          <div id="setup-warning" class="warning hidden"></div>
+        <div id="setup-warning" class="warning hidden"></div>
 
-          <div class="source-switch" role="radiogroup" aria-label="Источник трека">
-            <label>
-              <input id="provider-spotify" name="provider" type="radio" value="spotify" checked />
-              <span>Spotify API</span>
-            </label>
-            <label>
-              <input id="provider-lastfm" name="provider" type="radio" value="lastfm" />
-              <span>Last.fm</span>
-            </label>
-          </div>
+        <div class="source-switch" role="radiogroup" aria-label="Источник трека">
+          <label>
+            <input id="provider-spotify" name="provider" type="radio" value="spotify" checked />
+            <span>Spotify API</span>
+          </label>
+          <label>
+            <input id="provider-lastfm" name="provider" type="radio" value="lastfm" />
+            <span>Last.fm</span>
+          </label>
+        </div>
 
-          <div id="spotify-provider-settings">
-            <div class="client-id-box">
-              <label class="field-row">
-                <span>Spotify Client ID</span>
-                <input id="spotify-client-id" type="text" autocomplete="off" spellcheck="false" placeholder="Вставьте Client ID из Spotify Developer Dashboard" />
-              </label>
-              <div class="actions-row compact-actions">
-                <button id="save-client-id" class="secondary-button" type="button">Сохранить Client ID</button>
-              </div>
-
-              <label class="field-row">
-                <span>Redirect URI для Spotify app</span>
-                <input id="redirect-uri" type="text" readonly spellcheck="false" />
-              </label>
-              <div class="actions-row compact-actions">
-                <button id="copy-redirect-uri" class="secondary-button" type="button">Скопировать Redirect URI</button>
-              </div>
-
-              <details class="setup-guide">
-                <summary>Где взять Client ID</summary>
-                <ol>
-                  <li>Откройте Spotify Developer Dashboard.</li>
-                  <li>Создайте app и выберите Web API.</li>
-                  <li>Добавьте Redirect URI, показанный выше.</li>
-                  <li>Скопируйте Client ID из настроек app и вставьте сюда.</li>
-                  <li>Client Secret не вставляйте и никому не отправляйте.</li>
-                </ol>
-              </details>
-            </div>
-
-            <div class="actions-row auth-actions">
-              <button id="spotify-login" class="primary-button" type="button">Войти через Spotify</button>
-              <button id="spotify-logout" class="secondary-button" type="button">Сбросить доступ</button>
-            </div>
-          </div>
-
-          <div id="lastfm-provider-settings" class="client-id-box hidden">
+        <div id="spotify-provider-settings">
+          <div class="client-id-box">
             <label class="field-row">
-              <span>Last.fm username</span>
-              <input id="lastfm-username" type="text" autocomplete="off" spellcheck="false" placeholder="Ваш Last.fm username" />
-            </label>
-            <label class="field-row">
-              <span>Last.fm API key</span>
-              <input id="lastfm-api-key" type="text" autocomplete="off" spellcheck="false" placeholder="API key из Last.fm API account" />
+              <span>Spotify Client ID</span>
+              <input id="spotify-client-id" type="text" autocomplete="off" spellcheck="false"
+                placeholder="Вставьте Client ID из Spotify Developer Dashboard" />
             </label>
             <div class="actions-row compact-actions">
-              <button id="save-lastfm" class="secondary-button" type="button">Сохранить Last.fm</button>
+              <button id="save-client-id" class="secondary-button" type="button">Сохранить Client ID</button>
+            </div>
+
+            <label class="field-row">
+              <span>Redirect URI для Spotify app</span>
+              <input id="redirect-uri" type="text" readonly spellcheck="false" />
+            </label>
+            <div class="actions-row compact-actions">
+              <button id="copy-redirect-uri" class="secondary-button" type="button">Скопировать Redirect URI</button>
             </div>
 
             <details class="setup-guide">
-              <summary>Подробная настройка Last.fm</summary>
+              <summary>Где взять Client ID</summary>
               <ol>
-                <li>Откройте <a href="https://www.last.fm" target="_blank" rel="noreferrer">last.fm</a> и войдите в аккаунт. Если аккаунта нет, создайте его.</li>
-                <li>Откройте настройки подключённых приложений Last.fm: <a href="https://www.last.fm/settings/applications" target="_blank" rel="noreferrer">last.fm/settings/applications</a>.</li>
-                <li>В блоке «Предлагаемые приложения» нажмите «Подключить» именно у «Скробблинг Spotify».</li>
-                <li>Не выбирайте «Воспроизведение в Spotify»: это нужно для прослушивания музыки на Last.fm, а не для scrobbling.</li>
-                <li>Разрешите Last.fm доступ к Spotify и вернитесь на страницу настроек.</li>
-                <li>Включите любой трек в Spotify и проверьте, что он появился как текущий трек в вашем Last.fm профиле.</li>
-                <li>Откройте <a href="https://www.last.fm/api/account/create" target="_blank" rel="noreferrer">last.fm/api/account/create</a> и создайте API account.</li>
-                <li>В поле Application name укажите OBS Spotify Widget.</li>
-                <li>В Homepage укажите URL этого сайта. Callback URL можно оставить пустым; если Last.fm требует значение, вставьте URL этого сайта.</li>
-                <li>Скопируйте только API Key. Shared secret этому виджету не нужен.</li>
-                <li>Вставьте Last.fm username и API Key в поля выше и нажмите «Сохранить Last.fm».</li>
+                <li>Откройте Spotify Developer Dashboard.</li>
+                <li>Создайте app и выберите Web API.</li>
+                <li>Добавьте Redirect URI, показанный выше.</li>
+                <li>Скопируйте Client ID из настроек app и вставьте сюда.</li>
+                <li>Client Secret не вставляйте и никому не отправляйте.</li>
               </ol>
             </details>
-            <p class="hint">Прогресс в Last.fm режиме приблизительный: длительность берётся из Last.fm, а позиция считается с момента, когда виджет увидел текущий трек. Если Last.fm не знает длительность, используется 3:00.</p>
+          </div>
+
+          <div class="actions-row auth-actions">
+            <button id="spotify-login" class="primary-button" type="button">Войти через Spotify</button>
+            <button id="spotify-logout" class="secondary-button" type="button">Сбросить доступ</button>
           </div>
         </div>
 
-        <div class="section-block">
-          <h2>Предпросмотр</h2>
-          <div class="preview-stage">
-            <div id="preview-widget" class="widget widget--visible">
-              <div class="art-container">
-                <img id="preview-art" src="" alt="Album Art" />
-              </div>
-              <div class="track-info">
-                <div class="track-title-wrapper">
-                  <span id="preview-title" class="track-title">Подключите Spotify</span>
-                </div>
-                <div class="track-artist-wrapper">
-                  <span id="preview-artist" class="track-artist">Текущий трек появится здесь</span>
-                </div>
-                <div class="progress-row">
-                  <div class="progress-track" aria-hidden="true">
-                    <div id="preview-progress-fill" class="progress-fill"></div>
-                  </div>
-                  <span id="preview-time" class="time-label">0:00 / 0:00</span>
-                </div>
-              </div>
-              <div class="visualizer paused" id="preview-visualizer" aria-hidden="true">
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
-                <span class="bar"></span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="settings-panel">
-        <div class="section-block">
-          <h2>Кастомизация</h2>
-          <div class="control-grid">
-            <label>
-              <span>Фон</span>
-              <input id="bg-color" type="color" value="#101014" />
-            </label>
-            <label>
-              <span>Прозрачность</span>
-              <input id="bg-alpha" type="range" min="0" max="1" step="0.05" value="0.75" />
-            </label>
-            <label>
-              <span>Текст</span>
-              <input id="text-color" type="color" value="#ffffff" />
-            </label>
-            <label>
-              <span>Второй текст</span>
-              <input id="muted-color" type="color" value="#8e8e93" />
-            </label>
-            <label>
-              <span>Акцент</span>
-              <input id="accent-color" type="color" value="#1db954" />
-            </label>
-            <label>
-              <span>Ширина</span>
-              <input id="widget-width" type="number" min="260" max="900" step="10" value="420" />
-            </label>
-            <label>
-              <span>Высота</span>
-              <input id="widget-height" type="number" min="70" max="180" step="5" value="90" />
-            </label>
-            <label>
-              <span>Скругление</span>
-              <input id="widget-radius" type="number" min="0" max="40" step="1" value="14" />
-            </label>
-            <label>
-              <span>Размер текста</span>
-              <input id="font-scale" type="range" min="0.8" max="1.3" step="0.05" value="1" />
-            </label>
-            <label>
-              <span>Высота прогресса</span>
-              <input id="progress-height" type="range" min="2" max="10" step="1" value="4" />
-            </label>
-            <label>
-              <span>Размытие фона</span>
-              <input id="backdrop-blur" type="range" min="0" max="24" step="1" value="16" />
-            </label>
-          </div>
-
-          <label class="toggle-row">
-            <input id="hide-on-pause" type="checkbox" checked />
-            <span>Скрывать виджет на паузе</span>
+        <div id="lastfm-provider-settings" class="client-id-box hidden">
+          <label class="field-row">
+            <span>Last.fm username</span>
+            <input id="lastfm-username" type="text" autocomplete="off" spellcheck="false"
+              placeholder="Ваш Last.fm username" />
           </label>
-          <div class="toggle-grid">
-            <label class="toggle-row">
-              <input id="show-art" type="checkbox" checked />
-              <span>Показывать обложку</span>
-            </label>
-            <label class="toggle-row">
-              <input id="show-visualizer" type="checkbox" checked />
-              <span>Показывать визуалайзер</span>
-            </label>
-            <label class="toggle-row">
-              <input id="show-progress" type="checkbox" checked />
-              <span>Показывать прогресс трека</span>
-            </label>
-            <label class="toggle-row">
-              <input id="show-time" type="checkbox" checked />
-              <span>Показывать время трека</span>
-            </label>
+          <label class="field-row">
+            <span>Last.fm API key</span>
+            <input id="lastfm-api-key" type="text" autocomplete="off" spellcheck="false"
+              placeholder="API key из Last.fm API account" />
+          </label>
+          <div class="actions-row compact-actions">
+            <button id="save-lastfm" class="secondary-button" type="button">Сохранить Last.fm</button>
           </div>
-        </div>
 
-        <div class="section-block">
-          <h2>Ссылка для OBS</h2>
-          <textarea id="widget-url" readonly rows="4" spellcheck="false"></textarea>
-          <div class="actions-row">
-            <button id="copy-url" class="primary-button" type="button">Скопировать ссылку</button>
-            <button id="refresh-preview" class="secondary-button" type="button">Обновить предпросмотр</button>
-          </div>
-          <p class="hint">Ссылка содержит Spotify refresh token во фрагменте URL. Не публикуйте ее и не отправляйте другим людям.</p>
-        </div>
-      </section>
-    </main>
-
-    <div id="widget-root" class="widget-root hidden">
-      <div id="widget" class="widget widget--hidden">
-        <div class="art-container">
-          <img id="album-art" src="" alt="Album Art" />
-        </div>
-        <div class="track-info">
-          <div class="track-title-wrapper">
-            <span id="track-title" class="track-title"></span>
-          </div>
-          <div class="track-artist-wrapper">
-            <span id="track-artist" class="track-artist"></span>
-          </div>
-          <div class="progress-row">
-            <div class="progress-track" aria-hidden="true">
-              <div id="progress-fill" class="progress-fill"></div>
-            </div>
-            <span id="track-time" class="time-label">0:00 / 0:00</span>
-          </div>
-        </div>
-        <div class="visualizer paused" id="visualizer" aria-hidden="true">
-          <span class="bar"></span>
-          <span class="bar"></span>
-          <span class="bar"></span>
-          <span class="bar"></span>
+          <details class="setup-guide">
+            <summary>Подробная настройка Last.fm</summary>
+            <ol>
+              <li>Откройте <a href="https://www.last.fm" target="_blank" rel="noreferrer">last.fm</a> и войдите в
+                аккаунт. Если аккаунта нет, создайте его.</li>
+              <li>Откройте настройки подключённых приложений Last.fm: <a
+                  href="https://www.last.fm/settings/applications" target="_blank"
+                  rel="noreferrer">last.fm/settings/applications</a>.</li>
+              <li>В блоке «Предлагаемые приложения» нажмите «Подключить» именно у «Скробблинг Spotify».</li>
+              <li>Не выбирайте «Воспроизведение в Spotify»: это нужно для прослушивания музыки на Last.fm, а не для
+                scrobbling.</li>
+              <li>Разрешите Last.fm доступ к Spotify и вернитесь на страницу настроек.</li>
+              <li>Включите любой трек в Spotify и проверьте, что он появился как текущий трек в вашем Last.fm профиле.
+              </li>
+              <li>Откройте <a href="https://www.last.fm/api/account/create" target="_blank"
+                  rel="noreferrer">last.fm/api/account/create</a> и создайте API account.</li>
+              <li>В поле Application name укажите OBS Spotify Widget.</li>
+              <li>В Homepage укажите URL этого сайта. Callback URL можно оставить пустым; если Last.fm требует значение,
+                вставьте URL этого сайта.</li>
+              <li>Скопируйте только API Key. Shared secret этому виджету не нужен.</li>
+              <li>Вставьте Last.fm username и API Key в поля выше и нажмите «Сохранить Last.fm».</li>
+            </ol>
+          </details>
+          <p class="hint">Прогресс в Last.fm режиме приблизительный: длительность берётся из Last.fm, а позиция
+            считается с момента, когда виджет увидел текущий трек. Если Last.fm не знает длительность, используется
+            3:00.</p>
         </div>
       </div>
+
+      <div class="section-block">
+        <h2>Предпросмотр</h2>
+        <div class="preview-stage">
+          <div id="preview-widget" class="widget widget--visible">
+            <div class="art-container">
+              <img id="preview-art" src="" alt="Album Art" />
+            </div>
+            <div class="track-info">
+              <div class="track-title-wrapper">
+                <span id="preview-title" class="track-title">Подключите Spotify</span>
+              </div>
+              <div class="track-artist-wrapper">
+                <span id="preview-artist" class="track-artist">Текущий трек появится здесь</span>
+              </div>
+              <div class="progress-row">
+                <div class="progress-track" aria-hidden="true">
+                  <div id="preview-progress-fill" class="progress-fill"></div>
+                </div>
+                <span id="preview-time" class="time-label">0:00 / 0:00</span>
+              </div>
+            </div>
+            <div class="visualizer paused" id="preview-visualizer" aria-hidden="true">
+              <span class="bar"></span>
+              <span class="bar"></span>
+              <span class="bar"></span>
+              <span class="bar"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="settings-panel">
+      <div class="section-block">
+        <h2>Кастомизация</h2>
+        <div class="control-grid">
+          <label>
+            <span>Фон</span>
+            <input id="bg-color" type="color" value="#101014" />
+          </label>
+          <label>
+            <span>Прозрачность</span>
+            <input id="bg-alpha" type="range" min="0" max="1" step="0.05" value="0.75" />
+          </label>
+          <label>
+            <span>Текст</span>
+            <input id="text-color" type="color" value="#ffffff" />
+          </label>
+          <label>
+            <span>Второй текст</span>
+            <input id="muted-color" type="color" value="#8e8e93" />
+          </label>
+          <label>
+            <span>Акцент</span>
+            <input id="accent-color" type="color" value="#1db954" />
+          </label>
+          <label>
+            <span>Шрифт</span>
+            <select id="font-family">
+              <option value="system" selected>Системный</option>
+              <option value="inter">Inter / Segoe UI</option>
+              <option value="rounded">Rounded</option>
+              <option value="serif">Serif</option>
+              <option value="mono">Mono</option>
+            </select>
+          </label>
+          <label>
+            <span>Выравнивание текста</span>
+            <select id="text-align">
+              <option value="left" selected>Слева</option>
+              <option value="center">По центру</option>
+              <option value="right">Справа</option>
+            </select>
+          </label>
+          <label>
+            <span>Ширина</span>
+            <input id="widget-width" type="number" min="260" max="900" step="10" value="420" />
+          </label>
+          <label>
+            <span>Высота</span>
+            <input id="widget-height" type="number" min="70" max="180" step="5" value="90" />
+          </label>
+          <label>
+            <span>Скругление</span>
+            <input id="widget-radius" type="number" min="0" max="40" step="1" value="14" />
+          </label>
+          <label>
+            <span>Размер обложки</span>
+            <input id="art-size" type="range" min="44" max="120" step="1" value="66" />
+          </label>
+          <label>
+            <span>Отступы внутри</span>
+            <input id="widget-padding" type="range" min="0" max="32" step="1" value="12" />
+          </label>
+          <label>
+            <span>Расстояние элементов</span>
+            <input id="widget-gap" type="range" min="0" max="32" step="1" value="14" />
+          </label>
+          <label>
+            <span>Размер текста</span>
+            <input id="font-scale" type="range" min="0.8" max="1.3" step="0.05" value="1" />
+          </label>
+          <label>
+            <span>Заголовок</span>
+            <input id="title-size" type="range" min="14" max="32" step="1" value="20" />
+          </label>
+          <label>
+            <span>Исполнитель</span>
+            <input id="artist-size" type="range" min="11" max="24" step="1" value="15" />
+          </label>
+          <label>
+            <span>Высота прогресса</span>
+            <input id="progress-height" type="range" min="2" max="10" step="1" value="4" />
+          </label>
+          <label>
+            <span>Фон прогресса</span>
+            <input id="progress-bg-alpha" type="range" min="0" max="1" step="0.05" value="0.18" />
+          </label>
+          <label>
+            <span>Размытие фона</span>
+            <input id="backdrop-blur" type="range" min="0" max="24" step="1" value="16" />
+          </label>
+          <label>
+            <span>Тень</span>
+            <input id="shadow-opacity" type="range" min="0" max="0.6" step="0.02" value="0.24" />
+          </label>
+          <label>
+            <span>Размытие тени</span>
+            <input id="shadow-blur" type="range" min="0" max="60" step="1" value="30" />
+          </label>
+          <label>
+            <span>Толщина рамки</span>
+            <input id="border-width" type="range" min="0" max="6" step="1" value="0" />
+          </label>
+          <label>
+            <span>Цвет рамки</span>
+            <input id="border-color" type="color" value="#ffffff" />
+          </label>
+          <label>
+            <span>Прозрачность рамки</span>
+            <input id="border-alpha" type="range" min="0" max="1" step="0.05" value="0.35" />
+          </label>
+          <label>
+            <span>Высота визуалайзера</span>
+            <input id="visualizer-height" type="range" min="10" max="44" step="1" value="20" />
+          </label>
+          <label>
+            <span>Ширина полос</span>
+            <input id="visualizer-bar-width" type="range" min="2" max="10" step="1" value="3" />
+          </label>
+          <label>
+            <span>Скорость визуалайзера</span>
+            <input id="visualizer-speed" type="range" min="0.3" max="2" step="0.05" value="0.8" />
+          </label>
+          <label>
+            <span>Скорость бегущей строки</span>
+            <input id="marquee-speed" type="range" min="4" max="20" step="1" value="8" />
+          </label>
+        </div>
+
+        <label class="toggle-row">
+          <input id="hide-on-pause" type="checkbox" checked />
+          <span>Скрывать виджет на паузе</span>
+        </label>
+        <div class="toggle-grid">
+          <label class="toggle-row">
+            <input id="show-art" type="checkbox" checked />
+            <span>Показывать обложку</span>
+          </label>
+          <label class="toggle-row">
+            <input id="show-visualizer" type="checkbox" checked />
+            <span>Показывать визуалайзер</span>
+          </label>
+          <label class="toggle-row">
+            <input id="show-progress" type="checkbox" checked />
+            <span>Показывать прогресс трека</span>
+          </label>
+          <label class="toggle-row">
+            <input id="show-time" type="checkbox" checked />
+            <span>Показывать время трека</span>
+          </label>
+          <label class="toggle-row">
+            <input id="enable-marquee" type="checkbox" checked />
+            <span>Анимировать длинный текст</span>
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section class="output-panel">
+      <div class="section-block">
+        <h2>Custom CSS</h2>
+        <textarea id="custom-css" rows="8" spellcheck="false"
+          placeholder=".widget { border-style: dashed; }"></textarea>
+        <p class="hint">CSS сохраняется в OBS-ссылке и применяется к виджету. Удобные селекторы: .widget,
+          .art-container, .track-title, .track-artist, .progress-track, .bar.</p>
+      </div>
+
+      <div class="section-block">
+        <h2>Ссылка для OBS</h2>
+        <textarea id="widget-url" readonly rows="4" spellcheck="false"></textarea>
+        <div class="actions-row">
+          <button id="copy-url" class="primary-button" type="button">Скопировать ссылку</button>
+          <button id="refresh-preview" class="secondary-button" type="button">Обновить предпросмотр</button>
+        </div>
+        <p class="hint">Ссылка содержит Spotify refresh token во фрагменте URL. Не публикуйте ее и не отправляйте другим
+          людям.</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="widget-root" class="widget-root hidden">
+    <div id="widget" class="widget widget--hidden">
+      <div class="art-container">
+        <img id="album-art" src="" alt="Album Art" />
+      </div>
+      <div class="track-info">
+        <div class="track-title-wrapper">
+          <span id="track-title" class="track-title"></span>
+        </div>
+        <div class="track-artist-wrapper">
+          <span id="track-artist" class="track-artist"></span>
+        </div>
+        <div class="progress-row">
+          <div class="progress-track" aria-hidden="true">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+          <span id="track-time" class="time-label">0:00 / 0:00</span>
+        </div>
+      </div>
+      <div class="visualizer paused" id="visualizer" aria-hidden="true">
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+        <span class="bar"></span>
+      </div>
     </div>
-  </body>
+  </div>
+</body>
+
 </html>

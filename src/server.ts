@@ -179,6 +179,8 @@ function getContentType(filePath: string): string {
     case ".jpg":
     case ".jpeg":
       return "image/jpeg";
+    case ".webp":
+      return "image/webp";
     default:
       return "application/octet-stream";
   }

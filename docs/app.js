@@ -35,12 +35,58 @@
     lastfmProgress: {
       preview: { trackKey: "", startedAt: 0 },
       widget: { trackKey: "", startedAt: 0 }
-    }
+    },
+    marqueeEnabled: true
   };
 
   const controls = {};
   const preview = {};
   const widget = {};
+  const customCssStyleId = "custom-widget-css";
+  const FONT_FAMILIES = {
+    system: '"SF Pro Display", "Inter", system-ui, sans-serif',
+    inter: '"Inter", "Segoe UI", system-ui, sans-serif',
+    rounded: '"Arial Rounded MT Bold", "SF Pro Rounded", "Segoe UI", system-ui, sans-serif',
+    serif: 'Georgia, "Times New Roman", serif',
+    mono: '"SFMono-Regular", Consolas, "Liberation Mono", monospace'
+  };
+  const DEFAULT_SETTINGS = {
+    bgColor: "#101014",
+    bgAlpha: 0.75,
+    textColor: "#ffffff",
+    mutedColor: "#8e8e93",
+    accentColor: "#1db954",
+    fontFamily: "system",
+    textAlign: "left",
+    widgetWidth: 420,
+    widgetHeight: 90,
+    widgetRadius: 14,
+    artSize: 66,
+    widgetPadding: 12,
+    widgetGap: 14,
+    fontScale: 1,
+    titleSize: 20,
+    artistSize: 15,
+    progressHeight: 4,
+    progressBgAlpha: 0.18,
+    backdropBlur: 16,
+    shadowOpacity: 0.24,
+    shadowBlur: 30,
+    borderWidth: 0,
+    borderColor: "#ffffff",
+    borderAlpha: 0.35,
+    visualizerHeight: 20,
+    visualizerBarWidth: 3,
+    visualizerSpeed: 0.8,
+    marqueeSpeed: 8,
+    hideOnPause: true,
+    showArt: true,
+    showVisualizer: true,
+    showProgress: true,
+    showTime: true,
+    enableMarquee: true,
+    customCss: ""
+  };
 
   function getSiteClientId() {
     return String(SITE_CONFIG.spotifyClientId || "").trim();
@@ -552,6 +598,26 @@
     return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
   }
 
+  function normalizeSettings(settings) {
+    return { ...DEFAULT_SETTINGS, ...(settings || {}) };
+  }
+
+  function applyCustomCss(css) {
+    let style = document.getElementById(customCssStyleId);
+    if (!css) {
+      style?.remove();
+      return;
+    }
+
+    if (!style) {
+      style = document.createElement("style");
+      style.id = customCssStyleId;
+      document.head.append(style);
+    }
+
+    style.textContent = css;
+  }
+
   function getSettings() {
     return {
       bgColor: controls.bgColor.value,
@@ -559,32 +625,123 @@
       textColor: controls.textColor.value,
       mutedColor: controls.mutedColor.value,
       accentColor: controls.accentColor.value,
+      fontFamily: controls.fontFamily.value,
+      textAlign: controls.textAlign.value,
       widgetWidth: Number(controls.widgetWidth.value),
       widgetHeight: Number(controls.widgetHeight.value),
       widgetRadius: Number(controls.widgetRadius.value),
+      artSize: Number(controls.artSize.value),
+      widgetPadding: Number(controls.widgetPadding.value),
+      widgetGap: Number(controls.widgetGap.value),
       fontScale: Number(controls.fontScale.value),
+      titleSize: Number(controls.titleSize.value),
+      artistSize: Number(controls.artistSize.value),
       progressHeight: Number(controls.progressHeight.value),
+      progressBgAlpha: Number(controls.progressBgAlpha.value),
       backdropBlur: Number(controls.backdropBlur.value),
+      shadowOpacity: Number(controls.shadowOpacity.value),
+      shadowBlur: Number(controls.shadowBlur.value),
+      borderWidth: Number(controls.borderWidth.value),
+      borderColor: controls.borderColor.value,
+      borderAlpha: Number(controls.borderAlpha.value),
+      visualizerHeight: Number(controls.visualizerHeight.value),
+      visualizerBarWidth: Number(controls.visualizerBarWidth.value),
+      visualizerSpeed: Number(controls.visualizerSpeed.value),
+      marqueeSpeed: Number(controls.marqueeSpeed.value),
       hideOnPause: controls.hideOnPause.checked,
       showArt: controls.showArt.checked,
       showVisualizer: controls.showVisualizer.checked,
       showProgress: controls.showProgress.checked,
-      showTime: controls.showTime.checked
+      showTime: controls.showTime.checked,
+      enableMarquee: controls.enableMarquee.checked,
+      customCss: controls.customCss.value
     };
   }
 
+  function clampToInputRange(input, value) {
+    const min = Number(input.min || 0);
+    const max = Number(input.max || value);
+    return Math.min(Math.max(Math.ceil(value), min), max);
+  }
+
+  function getRecommendedWidgetSize(settings) {
+    const nextSettings = normalizeSettings(settings);
+    const paddingX = Math.round(nextSettings.widgetPadding * 1.15);
+    const border = nextSettings.borderWidth * 2;
+    const visualizerWidth = nextSettings.showVisualizer ? nextSettings.visualizerBarWidth * 4 + 9 : 0;
+    const artWidth = nextSettings.showArt ? nextSettings.artSize : 0;
+    const textWidth = 160;
+    const horizontalGaps =
+      (nextSettings.showArt ? nextSettings.widgetGap : 0) +
+      (nextSettings.showVisualizer ? nextSettings.widgetGap : 0);
+
+    const titleHeight = nextSettings.titleSize * nextSettings.fontScale * 1.18;
+    const artistHeight = nextSettings.artistSize * nextSettings.fontScale * 1.25 + 6;
+    const progressHeight = nextSettings.showProgress ? Math.max(nextSettings.progressHeight, 11 * nextSettings.fontScale) + 7 : 0;
+    const textHeight = titleHeight + artistHeight + progressHeight;
+    const visualizerHeight = nextSettings.showVisualizer ? nextSettings.visualizerHeight : 0;
+    const artHeight = nextSettings.showArt ? nextSettings.artSize : 0;
+
+    return {
+      width: paddingX * 2 + artWidth + textWidth + visualizerWidth + horizontalGaps + border,
+      height: nextSettings.widgetPadding * 2 + Math.max(artHeight, textHeight, visualizerHeight) + border
+    };
+  }
+
+  function syncWidgetSizeInputs(sourceInput) {
+    if (sourceInput === controls.widgetWidth || sourceInput === controls.widgetHeight) {
+      return;
+    }
+
+    const settings = getSettings();
+    const recommended = getRecommendedWidgetSize(settings);
+    const nextWidth = clampToInputRange(controls.widgetWidth, recommended.width);
+    const nextHeight = clampToInputRange(controls.widgetHeight, recommended.height);
+
+    if (Number(controls.widgetWidth.value) < nextWidth) {
+      controls.widgetWidth.value = String(nextWidth);
+    }
+
+    if (Number(controls.widgetHeight.value) < nextHeight) {
+      controls.widgetHeight.value = String(nextHeight);
+    }
+  }
+
   function applySettings(settings) {
-    document.documentElement.style.setProperty("--bg-color", hexToRgba(settings.bgColor, settings.bgAlpha));
-    document.documentElement.style.setProperty("--text-main-color", settings.textColor);
-    document.documentElement.style.setProperty("--text-muted-color", settings.mutedColor);
-    document.documentElement.style.setProperty("--accent-color", settings.accentColor);
-    document.documentElement.style.setProperty("--widget-width", `${settings.widgetWidth}px`);
-    document.documentElement.style.setProperty("--widget-height", `${settings.widgetHeight}px`);
-    document.documentElement.style.setProperty("--border-radius-widget", `${settings.widgetRadius}px`);
-    document.documentElement.style.setProperty("--border-radius-art", `${Math.max(settings.widgetRadius - 4, 0)}px`);
-    document.documentElement.style.setProperty("--font-scale", String(settings.fontScale));
-    document.documentElement.style.setProperty("--progress-height", `${settings.progressHeight}px`);
-    document.documentElement.style.setProperty("--backdrop-blur", `${settings.backdropBlur}px`);
+    const nextSettings = normalizeSettings(settings);
+    const borderColor = typeof nextSettings.borderColor === "string" ? nextSettings.borderColor : DEFAULT_SETTINGS.borderColor;
+    const bgColor = typeof nextSettings.bgColor === "string" ? nextSettings.bgColor : DEFAULT_SETTINGS.bgColor;
+
+    document.documentElement.style.setProperty("--bg-color", hexToRgba(bgColor, nextSettings.bgAlpha));
+    document.documentElement.style.setProperty("--text-main-color", nextSettings.textColor);
+    document.documentElement.style.setProperty("--text-muted-color", nextSettings.mutedColor);
+    document.documentElement.style.setProperty("--accent-color", nextSettings.accentColor);
+    document.documentElement.style.setProperty("--font-family-widget", FONT_FAMILIES[nextSettings.fontFamily] || FONT_FAMILIES.system);
+    document.documentElement.style.setProperty("--text-align-widget", nextSettings.textAlign);
+    document.documentElement.style.setProperty("--widget-width", `${nextSettings.widgetWidth}px`);
+    document.documentElement.style.setProperty("--widget-height", `${nextSettings.widgetHeight}px`);
+    document.documentElement.style.setProperty("--border-radius-widget", `${nextSettings.widgetRadius}px`);
+    document.documentElement.style.setProperty("--border-radius-art", `${Math.max(nextSettings.widgetRadius - 4, 0)}px`);
+    document.documentElement.style.setProperty("--art-size", `${nextSettings.artSize}px`);
+    document.documentElement.style.setProperty("--widget-padding-y", `${nextSettings.widgetPadding}px`);
+    document.documentElement.style.setProperty("--widget-padding-x", `${Math.round(nextSettings.widgetPadding * 1.15)}px`);
+    document.documentElement.style.setProperty("--widget-gap", `${nextSettings.widgetGap}px`);
+    document.documentElement.style.setProperty("--font-scale", String(nextSettings.fontScale));
+    document.documentElement.style.setProperty("--title-size", `${nextSettings.titleSize}px`);
+    document.documentElement.style.setProperty("--artist-size", `${nextSettings.artistSize}px`);
+    document.documentElement.style.setProperty("--progress-height", `${nextSettings.progressHeight}px`);
+    document.documentElement.style.setProperty("--progress-bg-color", hexToRgba("#ffffff", nextSettings.progressBgAlpha));
+    document.documentElement.style.setProperty("--backdrop-blur", `${nextSettings.backdropBlur}px`);
+    document.documentElement.style.setProperty("--shadow-opacity", String(nextSettings.shadowOpacity));
+    document.documentElement.style.setProperty("--shadow-blur", `${nextSettings.shadowBlur}px`);
+    document.documentElement.style.setProperty("--border-width", `${nextSettings.borderWidth}px`);
+    document.documentElement.style.setProperty("--border-color", hexToRgba(borderColor, nextSettings.borderAlpha));
+    document.documentElement.style.setProperty("--visualizer-height", `${nextSettings.visualizerHeight}px`);
+    document.documentElement.style.setProperty("--visualizer-bar-width", `${nextSettings.visualizerBarWidth}px`);
+    document.documentElement.style.setProperty("--visualizer-speed", `${nextSettings.visualizerSpeed}s`);
+    document.documentElement.style.setProperty("--marquee-speed", `${nextSettings.marqueeSpeed}s`);
+    state.marqueeEnabled = nextSettings.enableMarquee;
+    applyCustomCss(nextSettings.customCss);
   }
 
   function setWidgetVisible(root, visible) {
@@ -603,6 +760,10 @@
     textElement.classList.remove("is-marquee");
     textElement.style.removeProperty("--marquee-offset");
 
+    if (!state.marqueeEnabled) {
+      return;
+    }
+
     requestAnimationFrame(() => {
       const overflow = textElement.scrollWidth - wrapperElement.clientWidth;
       if (overflow > 2) {
@@ -610,6 +771,15 @@
         textElement.classList.add("is-marquee");
       }
     });
+  }
+
+  function refreshTextLayout(target) {
+    if (!target.title || !target.artist) {
+      return;
+    }
+
+    updateMarquee(target.title, target.titleWrapper);
+    updateMarquee(target.artist, target.artistWrapper);
   }
 
   function formatTime(ms) {
@@ -632,11 +802,12 @@
   }
 
   function updateWidgetOptions(target, settings, payload) {
+    const nextSettings = normalizeSettings(settings);
     const hasProgress = Boolean(payload?.track?.durationMs);
-    target.root.classList.toggle("widget--no-art", !settings.showArt);
-    target.root.classList.toggle("widget--no-visualizer", !settings.showVisualizer);
-    target.root.classList.toggle("widget--no-progress", !settings.showProgress || !hasProgress);
-    target.root.classList.toggle("widget--no-time", !settings.showTime || !hasProgress);
+    target.root.classList.toggle("widget--no-art", !nextSettings.showArt);
+    target.root.classList.toggle("widget--no-visualizer", !nextSettings.showVisualizer);
+    target.root.classList.toggle("widget--no-progress", !nextSettings.showProgress || !hasProgress);
+    target.root.classList.toggle("widget--no-time", !nextSettings.showTime || !hasProgress);
   }
 
   function updateProgress(target, payload) {
@@ -649,8 +820,9 @@
     const percent = durationMs ? (progressMs / durationMs) * 100 : 0;
     target.progressFill.style.width = `${Math.min(Math.max(percent, 0), 100)}%`;
     target.time.textContent = `${formatTime(progressMs)} / ${formatTime(durationMs)}`;
-    target.progressFill.style.display = target.lastSettings.showProgress ? "" : "none";
-    target.time.style.display = target.lastSettings.showTime ? "" : "none";
+    const settings = normalizeSettings(target.lastSettings);
+    target.progressFill.style.display = settings.showProgress ? "" : "none";
+    target.time.style.display = settings.showTime ? "" : "none";
   }
 
   function ensureProgressTicker(target) {
@@ -669,16 +841,17 @@
   }
 
   function renderWidget(target, payload, settings, trackKeyName) {
-    updateWidgetOptions(target, settings, payload);
+    const nextSettings = normalizeSettings(settings);
+    updateWidgetOptions(target, nextSettings, payload);
     target.lastPayload = payload;
-    target.lastSettings = settings;
+    target.lastSettings = nextSettings;
     ensureProgressTicker(target);
 
     if (payload.state === "unchanged") {
       return;
     }
 
-    if (payload.state === "stopped" || (payload.state === "paused" && settings.hideOnPause)) {
+    if (payload.state === "stopped" || (payload.state === "paused" && nextSettings.hideOnPause)) {
       target.visualizer.classList.add("paused");
       setWidgetVisible(target.root, false);
       return;
@@ -706,6 +879,7 @@
       }, 180);
     } else {
       updateProgress(target, payload);
+      refreshTextLayout(target);
     }
 
     setWidgetVisible(target.root, true);
@@ -948,17 +1122,36 @@
     controls.textColor = document.getElementById("text-color");
     controls.mutedColor = document.getElementById("muted-color");
     controls.accentColor = document.getElementById("accent-color");
+    controls.fontFamily = document.getElementById("font-family");
+    controls.textAlign = document.getElementById("text-align");
     controls.widgetWidth = document.getElementById("widget-width");
     controls.widgetHeight = document.getElementById("widget-height");
     controls.widgetRadius = document.getElementById("widget-radius");
+    controls.artSize = document.getElementById("art-size");
+    controls.widgetPadding = document.getElementById("widget-padding");
+    controls.widgetGap = document.getElementById("widget-gap");
     controls.fontScale = document.getElementById("font-scale");
+    controls.titleSize = document.getElementById("title-size");
+    controls.artistSize = document.getElementById("artist-size");
     controls.progressHeight = document.getElementById("progress-height");
+    controls.progressBgAlpha = document.getElementById("progress-bg-alpha");
     controls.backdropBlur = document.getElementById("backdrop-blur");
+    controls.shadowOpacity = document.getElementById("shadow-opacity");
+    controls.shadowBlur = document.getElementById("shadow-blur");
+    controls.borderWidth = document.getElementById("border-width");
+    controls.borderColor = document.getElementById("border-color");
+    controls.borderAlpha = document.getElementById("border-alpha");
+    controls.visualizerHeight = document.getElementById("visualizer-height");
+    controls.visualizerBarWidth = document.getElementById("visualizer-bar-width");
+    controls.visualizerSpeed = document.getElementById("visualizer-speed");
+    controls.marqueeSpeed = document.getElementById("marquee-speed");
     controls.hideOnPause = document.getElementById("hide-on-pause");
     controls.showArt = document.getElementById("show-art");
     controls.showVisualizer = document.getElementById("show-visualizer");
     controls.showProgress = document.getElementById("show-progress");
     controls.showTime = document.getElementById("show-time");
+    controls.enableMarquee = document.getElementById("enable-marquee");
+    controls.customCss = document.getElementById("custom-css");
     controls.widgetUrl = document.getElementById("widget-url");
     controls.copyUrl = document.getElementById("copy-url");
     controls.refreshPreview = document.getElementById("refresh-preview");
@@ -1059,21 +1252,45 @@
       controls.textColor,
       controls.mutedColor,
       controls.accentColor,
+      controls.fontFamily,
+      controls.textAlign,
       controls.widgetWidth,
       controls.widgetHeight,
       controls.widgetRadius,
+      controls.artSize,
+      controls.widgetPadding,
+      controls.widgetGap,
       controls.fontScale,
+      controls.titleSize,
+      controls.artistSize,
       controls.progressHeight,
+      controls.progressBgAlpha,
       controls.backdropBlur,
+      controls.shadowOpacity,
+      controls.shadowBlur,
+      controls.borderWidth,
+      controls.borderColor,
+      controls.borderAlpha,
+      controls.visualizerHeight,
+      controls.visualizerBarWidth,
+      controls.visualizerSpeed,
+      controls.marqueeSpeed,
       controls.hideOnPause,
       controls.showArt,
       controls.showVisualizer,
       controls.showProgress,
-      controls.showTime
+      controls.showTime,
+      controls.enableMarquee,
+      controls.customCss
     ]) {
       input.addEventListener("input", () => {
-        applySettings(getSettings());
+        syncWidgetSizeInputs(input);
+        const settings = getSettings();
+        applySettings(settings);
         updateWidgetUrl();
+        if (preview.lastPayload) {
+          renderWidget(preview, preview.lastPayload, settings, "previewTrackKey");
+        }
       });
     }
   }
