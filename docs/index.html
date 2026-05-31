@@ -151,157 +151,278 @@
     <section class="settings-panel">
       <div class="section-block">
         <h2>Кастомизация</h2>
-        <div class="control-grid">
-          <label>
-            <span>Фон</span>
-            <input id="bg-color" type="color" value="#101014" />
-          </label>
-          <label>
-            <span>Прозрачность</span>
-            <input id="bg-alpha" type="range" min="0" max="1" step="0.05" value="0.75" />
-          </label>
-          <label>
-            <span>Текст</span>
-            <input id="text-color" type="color" value="#ffffff" />
-          </label>
-          <label>
-            <span>Второй текст</span>
-            <input id="muted-color" type="color" value="#8e8e93" />
-          </label>
-          <label>
-            <span>Акцент</span>
-            <input id="accent-color" type="color" value="#1db954" />
-          </label>
-          <label>
-            <span>Шрифт</span>
-            <select id="font-family">
-              <option value="system" selected>Системный</option>
-              <option value="inter">Inter / Segoe UI</option>
-              <option value="rounded">Rounded</option>
-              <option value="serif">Serif</option>
-              <option value="mono">Mono</option>
-            </select>
-          </label>
-          <label>
-            <span>Выравнивание текста</span>
-            <select id="text-align">
-              <option value="left" selected>Слева</option>
-              <option value="center">По центру</option>
-              <option value="right">Справа</option>
-            </select>
-          </label>
-          <label>
-            <span>Ширина</span>
-            <input id="widget-width" type="number" min="260" max="900" step="10" value="420" />
-          </label>
-          <label>
-            <span>Высота</span>
-            <input id="widget-height" type="number" min="70" max="180" step="5" value="90" />
-          </label>
-          <label>
-            <span>Скругление</span>
-            <input id="widget-radius" type="number" min="0" max="40" step="1" value="14" />
-          </label>
-          <label>
-            <span>Размер обложки</span>
-            <input id="art-size" type="range" min="44" max="120" step="1" value="66" />
-          </label>
-          <label>
-            <span>Отступы внутри</span>
-            <input id="widget-padding" type="range" min="0" max="32" step="1" value="12" />
-          </label>
-          <label>
-            <span>Расстояние элементов</span>
-            <input id="widget-gap" type="range" min="0" max="32" step="1" value="14" />
-          </label>
-          <label>
-            <span>Размер текста</span>
-            <input id="font-scale" type="range" min="0.8" max="1.3" step="0.05" value="1" />
-          </label>
-          <label>
-            <span>Заголовок</span>
-            <input id="title-size" type="range" min="14" max="32" step="1" value="20" />
-          </label>
-          <label>
-            <span>Исполнитель</span>
-            <input id="artist-size" type="range" min="11" max="24" step="1" value="15" />
-          </label>
-          <label>
-            <span>Высота прогресса</span>
-            <input id="progress-height" type="range" min="2" max="10" step="1" value="4" />
-          </label>
-          <label>
-            <span>Фон прогресса</span>
-            <input id="progress-bg-alpha" type="range" min="0" max="1" step="0.05" value="0.18" />
-          </label>
-          <label>
-            <span>Размытие фона</span>
-            <input id="backdrop-blur" type="range" min="0" max="24" step="1" value="16" />
-          </label>
-          <label>
-            <span>Тень</span>
-            <input id="shadow-opacity" type="range" min="0" max="0.6" step="0.02" value="0.24" />
-          </label>
-          <label>
-            <span>Размытие тени</span>
-            <input id="shadow-blur" type="range" min="0" max="60" step="1" value="30" />
-          </label>
-          <label>
-            <span>Толщина рамки</span>
-            <input id="border-width" type="range" min="0" max="6" step="1" value="0" />
-          </label>
-          <label>
-            <span>Цвет рамки</span>
-            <input id="border-color" type="color" value="#ffffff" />
-          </label>
-          <label>
-            <span>Прозрачность рамки</span>
-            <input id="border-alpha" type="range" min="0" max="1" step="0.05" value="0.35" />
-          </label>
-          <label>
-            <span>Высота визуалайзера</span>
-            <input id="visualizer-height" type="range" min="10" max="44" step="1" value="20" />
-          </label>
-          <label>
-            <span>Ширина полос</span>
-            <input id="visualizer-bar-width" type="range" min="2" max="10" step="1" value="3" />
-          </label>
-          <label>
-            <span>Скорость визуалайзера</span>
-            <input id="visualizer-speed" type="range" min="0.3" max="2" step="0.05" value="0.8" />
-          </label>
-          <label>
-            <span>Скорость бегущей строки</span>
-            <input id="marquee-speed" type="range" min="4" max="20" step="1" value="8" />
-          </label>
-        </div>
 
-        <label class="toggle-row">
-          <input id="hide-on-pause" type="checkbox" checked />
-          <span>Скрывать виджет на паузе</span>
-        </label>
-        <div class="toggle-grid">
-          <label class="toggle-row">
-            <input id="show-art" type="checkbox" checked />
-            <span>Показывать обложку</span>
-          </label>
-          <label class="toggle-row">
-            <input id="show-visualizer" type="checkbox" checked />
-            <span>Показывать визуалайзер</span>
-          </label>
-          <label class="toggle-row">
-            <input id="show-progress" type="checkbox" checked />
-            <span>Показывать прогресс трека</span>
-          </label>
-          <label class="toggle-row">
-            <input id="show-time" type="checkbox" checked />
-            <span>Показывать время трека</span>
-          </label>
-          <label class="toggle-row">
-            <input id="enable-marquee" type="checkbox" checked />
-            <span>Анимировать длинный текст</span>
-          </label>
-        </div>
+        <details class="settings-group" open>
+          <summary>Фон</summary>
+          <div class="group-body">
+            <div class="bg-section">
+              <label class="field-row">
+                <span>Тип фона</span>
+                <select id="bg-type">
+                  <option value="color" selected>Цвет</option>
+                  <option value="gradient">Градиент</option>
+                  <option value="image">Картинка</option>
+                  <option value="albumart">Размытая обложка</option>
+                </select>
+              </label>
+
+              <div id="bg-gradient-controls" class="bg-controls control-grid hidden">
+                <label>
+                  <span>Второй цвет</span>
+                  <input id="bg-color-2" type="color" value="#2a2a32" />
+                </label>
+                <label>
+                  <span>Угол градиента</span>
+                  <input id="bg-gradient-angle" type="range" min="0" max="360" step="1" value="135" />
+                </label>
+              </div>
+
+              <div id="bg-image-controls" class="bg-controls hidden">
+                <label class="field-row">
+                  <span>URL картинки</span>
+                  <input id="bg-image-url" type="text" autocomplete="off" spellcheck="false"
+                    placeholder="https://.../image.jpg" />
+                </label>
+                <div class="control-grid">
+                  <label>
+                    <span>Размытие картинки</span>
+                    <input id="bg-image-blur" type="range" min="0" max="40" step="1" value="0" />
+                  </label>
+                  <label>
+                    <span>Затемнение</span>
+                    <input id="bg-image-overlay" type="range" min="0" max="0.9" step="0.05" value="0.4" />
+                  </label>
+                </div>
+              </div>
+
+              <div id="bg-art-controls" class="bg-controls control-grid hidden">
+                <label>
+                  <span>Размытие обложки</span>
+                  <input id="bg-art-blur" type="range" min="0" max="60" step="1" value="28" />
+                </label>
+                <label>
+                  <span>Затемнение</span>
+                  <input id="bg-art-overlay" type="range" min="0" max="0.9" step="0.05" value="0.45" />
+                </label>
+              </div>
+            </div>
+
+            <div class="control-grid">
+              <label>
+                <span>Фон / 1-й цвет</span>
+                <input id="bg-color" type="color" value="#101014" />
+              </label>
+              <label>
+                <span>Прозрачность фона</span>
+                <input id="bg-alpha" type="range" min="0" max="1" step="0.05" value="0.75" />
+              </label>
+            </div>
+          </div>
+        </details>
+
+        <details class="settings-group" open>
+          <summary>Цвета</summary>
+          <div class="group-body">
+            <div class="control-grid">
+              <label>
+                <span>Текст</span>
+                <input id="text-color" type="color" value="#ffffff" />
+              </label>
+              <label>
+                <span>Второй текст</span>
+                <input id="muted-color" type="color" value="#8e8e93" />
+              </label>
+              <label>
+                <span>Акцент (прогресс, визуалайзер)</span>
+                <input id="accent-color" type="color" value="#1db954" />
+              </label>
+            </div>
+          </div>
+        </details>
+
+        <details class="settings-group" open>
+          <summary>Шрифт и текст</summary>
+          <div class="group-body">
+            <div class="control-grid">
+              <label>
+                <span>Шрифт</span>
+                <select id="font-family">
+                  <option value="system" selected>Системный</option>
+                  <option value="inter">Inter / Segoe UI</option>
+                  <option value="rounded">Rounded</option>
+                  <option value="serif">Serif</option>
+                  <option value="mono">Mono</option>
+                  <option value="custom">Свой (Google Fonts)</option>
+                </select>
+              </label>
+              <label>
+                <span>Выравнивание текста</span>
+                <select id="text-align">
+                  <option value="left" selected>Слева</option>
+                  <option value="center">По центру</option>
+                  <option value="right">Справа</option>
+                </select>
+              </label>
+              <label>
+                <span>Размер текста</span>
+                <input id="font-scale" type="range" min="0.8" max="1.3" step="0.05" value="1" />
+              </label>
+              <label>
+                <span>Заголовок</span>
+                <input id="title-size" type="range" min="14" max="32" step="1" value="20" />
+              </label>
+              <label>
+                <span>Исполнитель</span>
+                <input id="artist-size" type="range" min="11" max="24" step="1" value="15" />
+              </label>
+              <label>
+                <span>Скорость бегущей строки</span>
+                <input id="marquee-speed" type="range" min="4" max="20" step="1" value="8" />
+              </label>
+            </div>
+
+            <div id="font-custom-controls" class="bg-controls hidden">
+              <label class="field-row">
+                <span>Ссылка Google Fonts</span>
+                <input id="google-font-url" type="text" autocomplete="off" spellcheck="false"
+                  placeholder="https://fonts.googleapis.com/css2?family=...&display=swap" />
+              </label>
+              <p class="hint">На fonts.google.com выберите шрифт → «Get font» → «Get embed code» и скопируйте сюда
+                ссылку из &lt;link href="..."&gt;. Шрифт применится к виджету.</p>
+            </div>
+
+            <label class="toggle-row">
+              <input id="enable-marquee" type="checkbox" checked />
+              <span>Анимировать длинный текст</span>
+            </label>
+          </div>
+        </details>
+
+        <details class="settings-group" open>
+          <summary>Размер и отступы</summary>
+          <div class="group-body">
+            <div class="control-grid">
+              <label>
+                <span>Ширина</span>
+                <input id="widget-width" type="number" min="260" max="900" step="10" value="420" />
+              </label>
+              <label>
+                <span>Высота</span>
+                <input id="widget-height" type="number" min="70" max="180" step="5" value="90" />
+              </label>
+              <label>
+                <span>Скругление</span>
+                <input id="widget-radius" type="number" min="0" max="40" step="1" value="14" />
+              </label>
+              <label>
+                <span>Размер обложки</span>
+                <input id="art-size" type="range" min="44" max="120" step="1" value="66" />
+              </label>
+              <label>
+                <span>Отступы внутри</span>
+                <input id="widget-padding" type="range" min="0" max="32" step="1" value="12" />
+              </label>
+              <label>
+                <span>Расстояние элементов</span>
+                <input id="widget-gap" type="range" min="0" max="32" step="1" value="14" />
+              </label>
+            </div>
+          </div>
+        </details>
+
+        <details class="settings-group" open>
+          <summary>Прогресс</summary>
+          <div class="group-body">
+            <div class="control-grid">
+              <label>
+                <span>Высота прогресса</span>
+                <input id="progress-height" type="range" min="2" max="10" step="1" value="4" />
+              </label>
+              <label>
+                <span>Фон прогресса</span>
+                <input id="progress-bg-alpha" type="range" min="0" max="1" step="0.05" value="0.18" />
+              </label>
+            </div>
+            <label class="toggle-row">
+              <input id="show-progress" type="checkbox" checked />
+              <span>Показывать прогресс трека</span>
+            </label>
+            <label class="toggle-row">
+              <input id="show-time" type="checkbox" checked />
+              <span>Показывать время трека</span>
+            </label>
+          </div>
+        </details>
+
+        <details class="settings-group" open>
+          <summary>Визуалайзер</summary>
+          <div class="group-body">
+            <div class="control-grid">
+              <label>
+                <span>Высота визуалайзера</span>
+                <input id="visualizer-height" type="range" min="10" max="44" step="1" value="20" />
+              </label>
+              <label>
+                <span>Ширина полос</span>
+                <input id="visualizer-bar-width" type="range" min="2" max="10" step="1" value="3" />
+              </label>
+              <label>
+                <span>Скорость визуалайзера</span>
+                <input id="visualizer-speed" type="range" min="0.3" max="2" step="0.05" value="0.8" />
+              </label>
+            </div>
+            <label class="toggle-row">
+              <input id="show-visualizer" type="checkbox" checked />
+              <span>Показывать визуалайзер</span>
+            </label>
+          </div>
+        </details>
+
+        <details class="settings-group" open>
+          <summary>Рамка и тень</summary>
+          <div class="group-body">
+            <div class="control-grid">
+              <label>
+                <span>Толщина рамки</span>
+                <input id="border-width" type="range" min="0" max="6" step="1" value="0" />
+              </label>
+              <label>
+                <span>Цвет рамки</span>
+                <input id="border-color" type="color" value="#ffffff" />
+              </label>
+              <label>
+                <span>Прозрачность рамки</span>
+                <input id="border-alpha" type="range" min="0" max="1" step="0.05" value="0.35" />
+              </label>
+              <label>
+                <span>Тень</span>
+                <input id="shadow-opacity" type="range" min="0" max="0.6" step="0.02" value="0.24" />
+              </label>
+              <label>
+                <span>Размытие тени</span>
+                <input id="shadow-blur" type="range" min="0" max="60" step="1" value="30" />
+              </label>
+              <label>
+                <span>Размытие фона (за виджетом)</span>
+                <input id="backdrop-blur" type="range" min="0" max="24" step="1" value="16" />
+              </label>
+            </div>
+          </div>
+        </details>
+
+        <details class="settings-group" open>
+          <summary>Элементы и поведение</summary>
+          <div class="group-body">
+            <label class="toggle-row">
+              <input id="show-art" type="checkbox" checked />
+              <span>Показывать обложку</span>
+            </label>
+            <label class="toggle-row">
+              <input id="hide-on-pause" type="checkbox" checked />
+              <span>Скрывать виджет на паузе</span>
+            </label>
+          </div>
+        </details>
       </div>
     </section>
 

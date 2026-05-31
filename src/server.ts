@@ -236,7 +236,7 @@ async function main(): Promise<void> {
   const server = http.createServer((request, response) => {
     const requestUrl = new URL(request.url || "/", `http://localhost:${config.server.port}`);
 
-    if (request.url?.startsWith("/config")) {
+    if (requestUrl.pathname === "/config") {
       sendJson(response, 200, getPublicConfig(config));
       return;
     }

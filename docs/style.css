@@ -11,7 +11,7 @@
   --text-main-color: #ffffff;
   --text-muted-color: #8e8e93;
   --accent-color: #1db954;
-  --font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-family: "Cascadia Code", "Cascadia Mono", Consolas, ui-monospace, monospace;
   --border-radius-art: 10px;
   --border-radius-widget: 14px;
   --widget-width: 420px;
@@ -19,7 +19,7 @@
   --font-scale: 1;
   --title-size: 20px;
   --artist-size: 15px;
-  --font-family-widget: var(--font-family);
+  --font-family-widget: "SF Pro Display", "Inter", system-ui, sans-serif;
   --text-align-widget: left;
   --art-size: 66px;
   --widget-padding-y: 12px;
@@ -37,6 +37,14 @@
   --visualizer-speed: 0.8s;
   --marquee-speed: 8s;
   --marquee-offset: 0px;
+  --bg-gradient: linear-gradient(135deg, rgba(16, 16, 20, 0.75), rgba(42, 42, 50, 0.75));
+  --bg-image-url: none;
+  --bg-image-blur: 0px;
+  --bg-image-overlay: 0;
+  --bg-art-url: none;
+  --bg-art-blur: 28px;
+  --bg-art-overlay: 0;
+  --bg-blur-spread: 40px;
 }
 
 * {
@@ -290,6 +298,95 @@ h2 {
   gap: 12px;
 }
 
+.settings-group {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 14px;
+  background: rgba(12, 14, 30, 0.55);
+  overflow: visible;
+}
+
+.settings-group > summary {
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  padding: 13px 16px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--body-text);
+  user-select: none;
+  background: rgba(105, 215, 255, 0.06);
+  border-radius: 10px;
+  transition: background 0.15s ease;
+}
+
+.settings-group > summary:hover {
+  background: rgba(105, 215, 255, 0.14);
+}
+
+.settings-group[open] > summary {
+  border-bottom: 1px solid var(--border);
+  border-radius: 10px 10px 0 0;
+}
+
+.settings-group > summary::-webkit-details-marker {
+  display: none;
+}
+
+.settings-group > summary::before {
+  content: "▸";
+  display: inline-block;
+  width: 1em;
+  margin-right: 9px;
+  color: var(--spotify);
+  transition: transform 0.15s ease;
+}
+
+.settings-group[open] > summary::before {
+  transform: rotate(90deg);
+}
+
+.group-body {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+}
+
+.group-body .toggle-row {
+  margin-top: 0;
+}
+
+.bg-section {
+  display: grid;
+  gap: 12px;
+}
+
+.bg-section > label,
+.bg-controls > label.field-row {
+  display: grid;
+  gap: 7px;
+  color: var(--muted-text);
+  font-size: 13px;
+}
+
+.bg-controls {
+  display: grid;
+  gap: 12px;
+}
+
+.bg-section input,
+.bg-section select,
+.bg-controls input {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 8px;
+  color: var(--body-text);
+  background: var(--field-bg);
+}
+
 .control-grid label,
 .toggle-row {
   display: grid;
@@ -310,19 +407,142 @@ h2 {
   background: var(--field-bg);
 }
 
+input[type="color"] {
+  cursor: pointer;
+}
+
+/* Native dropdown list: paint options dark instead of the default gray popup. */
+.bg-section select option,
+.control-grid select option {
+  background: #0e1126;
+  color: var(--body-text);
+}
+
+.bg-section select option:checked,
+.control-grid select option:checked {
+  background: var(--spotify);
+  color: #07101a;
+}
+
+/* Custom dropdown (replaces the native option popup, which cannot be rounded).
+   The native <select> stays in the DOM, visually hidden, as the value source. */
+.select {
+  position: relative;
+  width: 100%;
+}
+
+.select .native-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.select-trigger {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 38px;
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--field-bg);
+  color: var(--body-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.select-trigger::after {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: -3px;
+  border-right: 2px solid var(--muted-text);
+  border-bottom: 2px solid var(--muted-text);
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+}
+
+.select.open .select-trigger {
+  border-color: var(--spotify);
+}
+
+.select.open .select-trigger::after {
+  margin-top: 3px;
+  transform: rotate(225deg);
+}
+
+.select-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: none;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  max-height: 260px;
+  overflow-y: auto;
+  background: #0e1126;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.5);
+}
+
+.select.open .select-list {
+  display: block;
+}
+
+.select-option {
+  padding: 9px 11px;
+  border-radius: 7px;
+  color: var(--body-text);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.select-option:hover {
+  background: rgba(105, 215, 255, 0.14);
+}
+
+.select-option.selected {
+  background: var(--spotify);
+  color: #07101a;
+}
+
 #custom-css {
   min-height: 160px;
   resize: vertical;
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-family: "Cascadia Code", "Cascadia Mono", Consolas, ui-monospace, monospace;
   font-size: 13px;
   line-height: 1.45;
 }
 
 .toggle-row {
   margin-top: 14px;
-  grid-template-columns: 18px 1fr;
+  grid-template-columns: 20px 1fr;
   align-items: center;
+  gap: 10px;
   color: var(--body-text);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.toggle-row input[type="checkbox"] {
+  width: 19px;
+  height: 19px;
+  margin: 0;
+  accent-color: var(--spotify);
+  cursor: pointer;
 }
 
 .toggle-grid {
@@ -381,7 +601,8 @@ body.widget-mode {
   gap: var(--widget-gap);
   padding: var(--widget-padding-y) var(--widget-padding-x);
   color: var(--text-main-color);
-  background: var(--bg-color);
+  position: relative;
+  overflow: hidden;
   border: var(--border-width) solid var(--border-color);
   border-radius: var(--border-radius-widget);
   box-shadow: 0 12px var(--shadow-blur) rgba(0, 0, 0, var(--shadow-opacity));
@@ -389,6 +610,60 @@ body.widget-mode {
   font-family: var(--font-family-widget);
   opacity: 0;
   transform: translateY(10px);
+}
+
+/* Background layers: ::before paints the fill (color / gradient / image / blurred
+   album art), ::after is a readability tint for image and album-art modes. Both
+   sit behind the widget content (children are lifted to z-index 1). */
+.widget::before,
+.widget::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.widget::before {
+  background: var(--bg-color) center / cover no-repeat;
+}
+
+.widget::after {
+  display: none;
+}
+
+.widget--bg-gradient::before {
+  background: var(--bg-gradient);
+}
+
+.widget--bg-image::before {
+  /* Extend past the edges so the blur does not reveal soft transparent borders;
+     the widget's overflow:hidden clips it back to the rounded shape. */
+  inset: calc(-1 * var(--bg-blur-spread));
+  background: var(--bg-image-url) center / cover no-repeat;
+  filter: blur(var(--bg-image-blur));
+}
+
+.widget--bg-albumart::before {
+  inset: calc(-1 * var(--bg-blur-spread));
+  background: var(--bg-art-url) center / cover no-repeat;
+  filter: blur(var(--bg-art-blur));
+}
+
+.widget--bg-image::after {
+  display: block;
+  background: rgba(0, 0, 0, var(--bg-image-overlay));
+}
+
+.widget--bg-albumart::after {
+  display: block;
+  background: rgba(0, 0, 0, var(--bg-art-overlay));
+}
+
+.widget > * {
+  position: relative;
+  z-index: 1;
 }
 
 .widget--no-art {
@@ -486,11 +761,15 @@ body.widget-mode {
 }
 
 .progress-fill {
-  width: 0%;
+  width: 100%;
   height: 100%;
   border-radius: inherit;
   background: var(--accent-color);
-  transition: width 1s linear;
+  /* Animated via transform: scaleX() every animation frame (composited, sub-pixel
+     smooth). A CSS transition here would only add lag and fight the per-frame paint. */
+  transform: scaleX(0);
+  transform-origin: left center;
+  will-change: transform;
 }
 
 .time-label {

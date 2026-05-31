@@ -15,6 +15,7 @@
   const REDIRECT_KEY = "obs_spotify_widget_redirect_uri";
   const POLLING_INTERVAL_MS = 3000;
   const LASTFM_FALLBACK_DURATION_MS = 180000;
+  const LASTFM_DURATION_CACHE_LIMIT = 200;
   const PLACEHOLDER_ART =
     "data:image/svg+xml;charset=UTF-8," +
     encodeURIComponent(
@@ -36,6 +37,7 @@
       preview: { trackKey: "", startedAt: 0 },
       widget: { trackKey: "", startedAt: 0 }
     },
+    mockStartedAt: 0,
     marqueeEnabled: true
   };
 
@@ -53,10 +55,19 @@
   const DEFAULT_SETTINGS = {
     bgColor: "#101014",
     bgAlpha: 0.75,
+    bgType: "color",
+    bgColor2: "#2a2a32",
+    bgGradientAngle: 135,
+    bgImageUrl: "",
+    bgImageBlur: 0,
+    bgImageOverlay: 0.4,
+    bgArtBlur: 28,
+    bgArtOverlay: 0.45,
     textColor: "#ffffff",
     mutedColor: "#8e8e93",
     accentColor: "#1db954",
     fontFamily: "system",
+    googleFontUrl: "",
     textAlign: "left",
     widgetWidth: 420,
     widgetHeight: 90,
@@ -492,6 +503,18 @@
     return `${artist.toLowerCase()}\u0000${title.toLowerCase()}`;
   }
 
+  function rememberLastfmDuration(cacheKey, durationMs) {
+    const cache = state.lastfmDurationCache;
+    if (!(cacheKey in cache)) {
+      const keys = Object.keys(cache);
+      if (keys.length >= LASTFM_DURATION_CACHE_LIMIT) {
+        delete cache[keys[0]];
+      }
+    }
+    cache[cacheKey] = durationMs;
+    return durationMs;
+  }
+
   async function fetchLastfmDuration(config, artist, title) {
     const cacheKey = lastfmCacheKey(artist, title);
     if (state.lastfmDurationCache[cacheKey]) {
@@ -514,11 +537,11 @@
 
       const data = await response.json();
       const duration = Number(data?.track?.duration || 0);
-      state.lastfmDurationCache[cacheKey] = duration > 0 ? duration : LASTFM_FALLBACK_DURATION_MS;
-      return state.lastfmDurationCache[cacheKey];
+      return rememberLastfmDuration(cacheKey, duration > 0 ? duration : LASTFM_FALLBACK_DURATION_MS);
     } catch (_error) {
-      state.lastfmDurationCache[cacheKey] = LASTFM_FALLBACK_DURATION_MS;
-      return state.lastfmDurationCache[cacheKey];
+      // Don't cache transient failures: return the fallback for now and retry
+      // on the next poll so the real duration can be picked up once the API recovers.
+      return LASTFM_FALLBACK_DURATION_MS;
     }
   }
 
@@ -622,10 +645,19 @@
     return {
       bgColor: controls.bgColor.value,
       bgAlpha: Number(controls.bgAlpha.value),
+      bgType: controls.bgType.value,
+      bgColor2: controls.bgColor2.value,
+      bgGradientAngle: Number(controls.bgGradientAngle.value),
+      bgImageUrl: controls.bgImageUrl.value.trim(),
+      bgImageBlur: Number(controls.bgImageBlur.value),
+      bgImageOverlay: Number(controls.bgImageOverlay.value),
+      bgArtBlur: Number(controls.bgArtBlur.value),
+      bgArtOverlay: Number(controls.bgArtOverlay.value),
       textColor: controls.textColor.value,
       mutedColor: controls.mutedColor.value,
       accentColor: controls.accentColor.value,
       fontFamily: controls.fontFamily.value,
+      googleFontUrl: controls.googleFontUrl.value.trim(),
       textAlign: controls.textAlign.value,
       widgetWidth: Number(controls.widgetWidth.value),
       widgetHeight: Number(controls.widgetHeight.value),
@@ -707,16 +739,73 @@
     }
   }
 
+  // Inject (or update) the Google Fonts stylesheet and return the family name parsed
+  // from the URL. Restricted to fonts.googleapis.com so widget-link data can't inject
+  // an arbitrary stylesheet.
+  function loadGoogleFont(url) {
+    let parsed;
+    try {
+      parsed = new URL(url);
+    } catch (_error) {
+      return "";
+    }
+
+    if (parsed.hostname !== "fonts.googleapis.com") {
+      return "";
+    }
+
+    const firstFamily = parsed.searchParams.getAll("family")[0] || "";
+    const familyName = firstFamily.split(":")[0].replace(/\+/g, " ").trim();
+    if (!familyName) {
+      return "";
+    }
+
+    let link = document.getElementById("google-font-link");
+    if (!link) {
+      link = document.createElement("link");
+      link.id = "google-font-link";
+      link.rel = "stylesheet";
+      document.head.appendChild(link);
+    }
+    if (link.getAttribute("href") !== url) {
+      link.setAttribute("href", url);
+    }
+
+    return familyName;
+  }
+
+  function applyWidgetFont(settings) {
+    if (settings.fontFamily === "custom" && settings.googleFontUrl) {
+      const family = loadGoogleFont(settings.googleFontUrl);
+      if (family) {
+        document.documentElement.style.setProperty("--font-family-widget", `"${family}", system-ui, sans-serif`);
+        return;
+      }
+    }
+
+    document.documentElement.style.setProperty("--font-family-widget", FONT_FAMILIES[settings.fontFamily] || FONT_FAMILIES.system);
+  }
+
   function applySettings(settings) {
     const nextSettings = normalizeSettings(settings);
     const borderColor = typeof nextSettings.borderColor === "string" ? nextSettings.borderColor : DEFAULT_SETTINGS.borderColor;
     const bgColor = typeof nextSettings.bgColor === "string" ? nextSettings.bgColor : DEFAULT_SETTINGS.bgColor;
 
     document.documentElement.style.setProperty("--bg-color", hexToRgba(bgColor, nextSettings.bgAlpha));
+    const bgColor2 = typeof nextSettings.bgColor2 === "string" ? nextSettings.bgColor2 : DEFAULT_SETTINGS.bgColor2;
+    document.documentElement.style.setProperty(
+      "--bg-gradient",
+      `linear-gradient(${nextSettings.bgGradientAngle}deg, ${hexToRgba(bgColor, nextSettings.bgAlpha)}, ${hexToRgba(bgColor2, nextSettings.bgAlpha)})`
+    );
+    document.documentElement.style.setProperty("--bg-image-url", nextSettings.bgImageUrl ? `url("${nextSettings.bgImageUrl}")` : "none");
+    document.documentElement.style.setProperty("--bg-image-blur", `${nextSettings.bgImageBlur}px`);
+    document.documentElement.style.setProperty("--bg-image-overlay", String(nextSettings.bgImageOverlay));
+    document.documentElement.style.setProperty("--bg-art-blur", `${nextSettings.bgArtBlur}px`);
+    document.documentElement.style.setProperty("--bg-art-overlay", String(nextSettings.bgArtOverlay));
     document.documentElement.style.setProperty("--text-main-color", nextSettings.textColor);
     document.documentElement.style.setProperty("--text-muted-color", nextSettings.mutedColor);
     document.documentElement.style.setProperty("--accent-color", nextSettings.accentColor);
-    document.documentElement.style.setProperty("--font-family-widget", FONT_FAMILIES[nextSettings.fontFamily] || FONT_FAMILIES.system);
+    applyWidgetFont(nextSettings);
     document.documentElement.style.setProperty("--text-align-widget", nextSettings.textAlign);
     document.documentElement.style.setProperty("--widget-width", `${nextSettings.widgetWidth}px`);
     document.documentElement.style.setProperty("--widget-height", `${nextSettings.widgetHeight}px`);
@@ -749,8 +838,12 @@
     root.classList.toggle("widget--hidden", !visible);
   }
 
+  function resolveArtSrc(artUrl) {
+    return artUrl && artUrl.trim() ? artUrl : PLACEHOLDER_ART;
+  }
+
   function setAlbumArt(image, artUrl) {
-    const nextSrc = artUrl && artUrl.trim() ? artUrl : PLACEHOLDER_ART;
+    const nextSrc = resolveArtSrc(artUrl);
     if (image.src !== nextSrc) {
       image.src = nextSrc;
     }
@@ -782,6 +875,29 @@
     updateMarquee(target.artist, target.artistWrapper);
   }
 
+  // Signature of everything that can change whether/how the marquee overflows.
+  // Used to skip redundant reflow-triggering recomputes on unchanged polls.
+  function getTextLayoutKey(target, settings) {
+    const s = normalizeSettings(settings);
+    return [
+      target.title.textContent,
+      target.artist.textContent,
+      s.widgetWidth,
+      s.artSize,
+      s.widgetPadding,
+      s.widgetGap,
+      s.fontScale,
+      s.titleSize,
+      s.artistSize,
+      s.fontFamily,
+      s.googleFontUrl,
+      s.textAlign,
+      s.enableMarquee,
+      s.showArt,
+      s.showVisualizer
+    ].join(" ");
+  }
+
   function formatTime(ms) {
     const totalSeconds = Math.max(Math.floor(Number(ms || 0) / 1000), 0);
     const minutes = Math.floor(totalSeconds / 60);
@@ -801,6 +917,12 @@
     return Math.min(Math.max(baseProgress + liveOffset, 0), durationMs);
   }
 
+  // Animate the bar via scaleX (composited, sub-pixel smooth) instead of width,
+  // which the browser snaps to whole pixels and makes a slow bar visibly step.
+  function setProgressFill(fill, fraction) {
+    fill.style.transform = `scaleX(${Math.min(Math.max(fraction, 0), 1)})`;
+  }
+
   function updateWidgetOptions(target, settings, payload) {
     const nextSettings = normalizeSettings(settings);
     const hasProgress = Boolean(payload?.track?.durationMs);
@@ -808,6 +930,11 @@
     target.root.classList.toggle("widget--no-visualizer", !nextSettings.showVisualizer);
     target.root.classList.toggle("widget--no-progress", !nextSettings.showProgress || !hasProgress);
     target.root.classList.toggle("widget--no-time", !nextSettings.showTime || !hasProgress);
+
+    const bgType = ["color", "gradient", "image", "albumart"].includes(nextSettings.bgType) ? nextSettings.bgType : "color";
+    target.root.classList.toggle("widget--bg-gradient", bgType === "gradient");
+    target.root.classList.toggle("widget--bg-image", bgType === "image");
+    target.root.classList.toggle("widget--bg-albumart", bgType === "albumart");
   }
 
   function updateProgress(target, payload) {
@@ -817,27 +944,56 @@
 
     const durationMs = Number(payload.track.durationMs);
     const progressMs = getProgressMs(payload);
-    const percent = durationMs ? (progressMs / durationMs) * 100 : 0;
-    target.progressFill.style.width = `${Math.min(Math.max(percent, 0), 100)}%`;
+    setProgressFill(target.progressFill, progressMs / durationMs);
     target.time.textContent = `${formatTime(progressMs)} / ${formatTime(durationMs)}`;
+    target.shownSecond = Math.floor(progressMs / 1000);
     const settings = normalizeSettings(target.lastSettings);
     target.progressFill.style.display = settings.showProgress ? "" : "none";
     target.time.style.display = settings.showTime ? "" : "none";
   }
 
-  function ensureProgressTicker(target) {
-    if (target.progressTimer) {
+  // Per-frame painter: advances the bar smoothly every animation frame and only
+  // rewrites the time label when the whole-second value actually changes, so the
+  // counter ticks evenly instead of jittering with setInterval drift.
+  function paintProgressFrame(target) {
+    const payload = target.lastPayload;
+    if (!target.progressFill || !target.time || !payload?.track?.durationMs) {
       return;
     }
 
-    target.progressTimer = window.setInterval(() => {
+    const durationMs = Number(payload.track.durationMs);
+    const progressMs = getProgressMs(payload);
+    setProgressFill(target.progressFill, progressMs / durationMs);
+
+    const shownSecond = Math.floor(progressMs / 1000);
+    if (shownSecond !== target.shownSecond) {
+      target.shownSecond = shownSecond;
+      target.time.textContent = `${formatTime(progressMs)} / ${formatTime(durationMs)}`;
+    }
+  }
+
+  function ensureProgressTicker(target) {
+    if (target.progressRaf) {
+      return;
+    }
+
+    const frame = () => {
+      target.progressRaf = window.requestAnimationFrame(frame);
+
       if (!target.lastPayload || !target.lastSettings) {
         return;
       }
 
-      updateWidgetOptions(target, target.lastSettings, target.lastPayload);
-      updateProgress(target, target.lastPayload);
-    }, 1000);
+      // Only the playing state advances; paused/stopped progress is static and a
+      // hidden widget needs no painting at all.
+      if (target.lastPayload.state !== "playing" || target.root.classList.contains("widget--hidden")) {
+        return;
+      }
+
+      paintProgressFrame(target);
+    };
+
+    target.progressRaf = window.requestAnimationFrame(frame);
   }
 
   function renderWidget(target, payload, settings, trackKeyName) {
@@ -867,19 +1023,27 @@
       state[trackKeyName] = nextTrackKey;
       target.info.classList.add("fading");
       target.artContainer.classList.add("fading");
-      window.setTimeout(() => {
+      window.clearTimeout(target.fadeTimer);
+      target.fadeTimer = window.setTimeout(() => {
         setAlbumArt(target.art, payload.track.artUrl);
+        target.root.style.setProperty("--bg-art-url", `url("${resolveArtSrc(payload.track.artUrl)}")`);
         target.title.textContent = payload.track.title;
         target.artist.textContent = payload.track.artist;
         updateMarquee(target.title, target.titleWrapper);
         updateMarquee(target.artist, target.artistWrapper);
         updateProgress(target, payload);
+        target.lastLayoutKey = getTextLayoutKey(target, nextSettings);
         target.info.classList.remove("fading");
         target.artContainer.classList.remove("fading");
+        target.fadeTimer = 0;
       }, 180);
     } else {
       updateProgress(target, payload);
-      refreshTextLayout(target);
+      const layoutKey = getTextLayoutKey(target, nextSettings);
+      if (target.lastLayoutKey !== layoutKey) {
+        target.lastLayoutKey = layoutKey;
+        refreshTextLayout(target);
+      }
     }
 
     setWidgetVisible(target.root, true);
@@ -887,6 +1051,14 @@
   }
 
   function renderMockPreview() {
+    const durationMs = 244000;
+    // Anchor the demo clock once and derive position from real elapsed time so the
+    // preview bar flows continuously (and loops) instead of snapping back on each poll.
+    if (!state.mockStartedAt) {
+      state.mockStartedAt = Date.now() - 78000;
+    }
+    const progressMs = (Date.now() - state.mockStartedAt) % durationMs;
+
     renderWidget(
       preview,
       {
@@ -896,8 +1068,8 @@
           artist: "M83",
           album: "Hurry Up, We're Dreaming",
           artUrl: "",
-          durationMs: 244000,
-          progressMs: 78000,
+          durationMs,
+          progressMs,
           sampledAt: Date.now()
         }
       },
@@ -1119,6 +1291,19 @@
     controls.logout = document.getElementById("spotify-logout");
     controls.bgColor = document.getElementById("bg-color");
     controls.bgAlpha = document.getElementById("bg-alpha");
+    controls.bgType = document.getElementById("bg-type");
+    controls.bgColor2 = document.getElementById("bg-color-2");
+    controls.bgGradientAngle = document.getElementById("bg-gradient-angle");
+    controls.bgImageUrl = document.getElementById("bg-image-url");
+    controls.bgImageBlur = document.getElementById("bg-image-blur");
+    controls.bgImageOverlay = document.getElementById("bg-image-overlay");
+    controls.bgArtBlur = document.getElementById("bg-art-blur");
+    controls.bgArtOverlay = document.getElementById("bg-art-overlay");
+    controls.bgGradientControls = document.getElementById("bg-gradient-controls");
+    controls.bgImageControls = document.getElementById("bg-image-controls");
+    controls.bgArtControls = document.getElementById("bg-art-controls");
+    controls.googleFontUrl = document.getElementById("google-font-url");
+    controls.fontCustomControls = document.getElementById("font-custom-controls");
     controls.textColor = document.getElementById("text-color");
     controls.mutedColor = document.getElementById("muted-color");
     controls.accentColor = document.getElementById("accent-color");
@@ -1249,10 +1434,19 @@
     for (const input of [
       controls.bgColor,
       controls.bgAlpha,
+      controls.bgType,
+      controls.bgColor2,
+      controls.bgGradientAngle,
+      controls.bgImageUrl,
+      controls.bgImageBlur,
+      controls.bgImageOverlay,
+      controls.bgArtBlur,
+      controls.bgArtOverlay,
       controls.textColor,
       controls.mutedColor,
       controls.accentColor,
       controls.fontFamily,
+      controls.googleFontUrl,
       controls.textAlign,
       controls.widgetWidth,
       controls.widgetHeight,
@@ -1293,6 +1487,137 @@
         }
       });
     }
+
+    controls.bgType.addEventListener("change", updateBgControlsVisibility);
+    updateBgControlsVisibility();
+
+    controls.fontFamily.addEventListener("change", updateFontControlsVisibility);
+    updateFontControlsVisibility();
+
+    enhanceSelect(controls.bgType);
+    enhanceSelect(controls.fontFamily);
+    enhanceSelect(controls.textAlign);
+
+    // Color swatches sit inside <label>, so clicking the label text would forward
+    // to the input and open the OS color picker. Only let the swatch itself open it.
+    for (const colorInput of document.querySelectorAll('input[type="color"]')) {
+      const label = colorInput.closest("label");
+      if (label) {
+        label.addEventListener("click", (event) => {
+          if (event.target !== colorInput) {
+            event.preventDefault();
+          }
+        });
+      }
+    }
+  }
+
+  function updateBgControlsVisibility() {
+    const type = controls.bgType.value;
+    controls.bgGradientControls.classList.toggle("hidden", type !== "gradient");
+    controls.bgImageControls.classList.toggle("hidden", type !== "image");
+    controls.bgArtControls.classList.toggle("hidden", type !== "albumart");
+  }
+
+  function updateFontControlsVisibility() {
+    controls.fontCustomControls.classList.toggle("hidden", controls.fontFamily.value !== "custom");
+  }
+
+  // Replace a native <select> with a custom, fully styleable dropdown while keeping
+  // the original element in the DOM as the value source (so getSettings, the input
+  // listeners, and the OBS URL keep working unchanged).
+  function enhanceSelect(select) {
+    if (!select || select.dataset.enhanced) {
+      return;
+    }
+    select.dataset.enhanced = "true";
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "select";
+    select.parentNode.insertBefore(wrapper, select);
+    wrapper.appendChild(select);
+    select.classList.add("native-select");
+    select.tabIndex = -1;
+    select.setAttribute("aria-hidden", "true");
+
+    const trigger = document.createElement("button");
+    trigger.type = "button";
+    trigger.className = "select-trigger";
+    trigger.setAttribute("aria-haspopup", "listbox");
+    trigger.setAttribute("aria-expanded", "false");
+    const valueLabel = document.createElement("span");
+    valueLabel.className = "select-value";
+    trigger.appendChild(valueLabel);
+    wrapper.appendChild(trigger);
+
+    const list = document.createElement("ul");
+    list.className = "select-list";
+    list.setAttribute("role", "listbox");
+    wrapper.appendChild(list);
+
+    const options = Array.from(select.options);
+    const optionEls = options.map((option) => {
+      const item = document.createElement("li");
+      item.className = "select-option";
+      item.setAttribute("role", "option");
+      item.dataset.value = option.value;
+      item.textContent = option.textContent;
+      item.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setValue(option.value);
+        close();
+      });
+      list.appendChild(item);
+      return item;
+    });
+
+    function syncLabel() {
+      const current = options.find((option) => option.value === select.value) || options[0];
+      valueLabel.textContent = current ? current.textContent : "";
+      for (const item of optionEls) {
+        item.classList.toggle("selected", item.dataset.value === select.value);
+      }
+    }
+
+    function setValue(value) {
+      if (select.value !== value) {
+        select.value = value;
+        select.dispatchEvent(new Event("input", { bubbles: true }));
+        select.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      syncLabel();
+    }
+
+    function open() {
+      wrapper.classList.add("open");
+      trigger.setAttribute("aria-expanded", "true");
+    }
+
+    function close() {
+      wrapper.classList.remove("open");
+      trigger.setAttribute("aria-expanded", "false");
+    }
+
+    trigger.addEventListener("click", (event) => {
+      event.preventDefault();
+      wrapper.classList.contains("open") ? close() : open();
+    });
+
+    trigger.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        close();
+      }
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!wrapper.contains(event.target)) {
+        close();
+      }
+    });
+
+    select.addEventListener("change", syncLabel);
+    syncLabel();
   }
 
   function bindWidgetMode() {
