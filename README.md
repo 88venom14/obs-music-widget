@@ -47,14 +47,42 @@ Spotify can return HTTP 403 if the owner of the Spotify app does not have an act
 
 Last.fm mode is the fallback for users who cannot use Spotify Web API because of Premium or Development Mode restrictions. It reads the currently scrobbled track from Last.fm instead of calling Spotify.
 
-1. Open https://www.last.fm and create or sign in to an account.
-2. Connect Spotify scrobbling in Last.fm settings.
-3. Open https://www.last.fm/api/account/create and create an API account.
-4. Copy the Last.fm **API Key**. The shared secret is not used by this widget.
-5. Open the widget website and select **Last.fm**.
-6. Paste Last.fm username and API key.
-7. Save Last.fm settings.
-8. Copy the generated OBS URL.
+### 1. Connect Spotify Scrobbling
+
+1. Open https://www.last.fm and sign in.
+2. If you do not have a Last.fm account, create one first.
+3. Open https://www.last.fm/settings/applications.
+4. Find the **Suggested applications** / **Предлагаемые приложения** block.
+5. Click **Connect** / **Подключить** next to **Spotify Scrobbling** / **Скробблинг Spotify**.
+6. Do not choose **Spotify Playback** / **Воспроизведение в Spotify** for this widget. Playback is for listening through Last.fm; scrobbling is what sends the currently playing Spotify track to Last.fm.
+7. Allow Last.fm access to Spotify.
+8. Start playing a track in Spotify.
+9. Open your Last.fm profile and confirm that the track appears as currently playing. If it does not appear, the OBS widget will not be able to see it either.
+
+### 2. Create A Last.fm API Key
+
+1. Open https://www.last.fm/api/account/create.
+2. Fill the form:
+   - **Application name**: `OBS Spotify Widget`
+   - **Application description**: `OBS music widget`
+   - **Application homepage**: `https://88venom14.github.io/obs-music-widget/`
+   - **Callback URL**: leave empty. If Last.fm requires a value, use `https://88venom14.github.io/obs-music-widget/`
+3. Submit the form.
+4. Copy **API Key**.
+5. Do not copy or share **Shared secret**. This widget does not use it.
+
+### 3. Configure The Widget
+
+1. Open https://88venom14.github.io/obs-music-widget/.
+2. Select **Last.fm**.
+3. Paste your Last.fm username.
+4. Paste your Last.fm API Key.
+5. Click **Сохранить Last.fm**.
+6. Start playing music in Spotify.
+7. Wait until Last.fm shows the track as now playing.
+8. Customize the widget.
+9. Copy the generated OBS URL.
+10. Paste the URL into OBS Browser Source.
 
 Last.fm can lag behind Spotify by several seconds because it depends on scrobbling. If Last.fm does not report a `nowplaying` track, the widget hides itself.
 

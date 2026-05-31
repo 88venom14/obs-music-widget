@@ -83,12 +83,19 @@
             </div>
 
             <details class="setup-guide">
-              <summary>Как настроить Last.fm</summary>
+              <summary>Подробная настройка Last.fm</summary>
               <ol>
-                <li>Создайте Last.fm аккаунт.</li>
-                <li>Подключите Spotify scrobbling в настройках Last.fm.</li>
-                <li>Создайте API account на Last.fm и скопируйте API key.</li>
-                <li>Вставьте Last.fm username и API key сюда.</li>
+                <li>Откройте <a href="https://www.last.fm" target="_blank" rel="noreferrer">last.fm</a> и войдите в аккаунт. Если аккаунта нет, создайте его.</li>
+                <li>Откройте настройки подключённых приложений Last.fm: <a href="https://www.last.fm/settings/applications" target="_blank" rel="noreferrer">last.fm/settings/applications</a>.</li>
+                <li>В блоке «Предлагаемые приложения» нажмите «Подключить» именно у «Скробблинг Spotify».</li>
+                <li>Не выбирайте «Воспроизведение в Spotify»: это нужно для прослушивания музыки на Last.fm, а не для scrobbling.</li>
+                <li>Разрешите Last.fm доступ к Spotify и вернитесь на страницу настроек.</li>
+                <li>Включите любой трек в Spotify и проверьте, что он появился как текущий трек в вашем Last.fm профиле.</li>
+                <li>Откройте <a href="https://www.last.fm/api/account/create" target="_blank" rel="noreferrer">last.fm/api/account/create</a> и создайте API account.</li>
+                <li>В поле Application name укажите OBS Spotify Widget.</li>
+                <li>В Homepage укажите URL этого сайта. Callback URL можно оставить пустым; если Last.fm требует значение, вставьте URL этого сайта.</li>
+                <li>Скопируйте только API Key. Shared secret этому виджету не нужен.</li>
+                <li>Вставьте Last.fm username и API Key в поля выше и нажмите «Сохранить Last.fm».</li>
               </ol>
             </details>
           </div>
