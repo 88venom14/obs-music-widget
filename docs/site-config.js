@@ -1,4 +1,4 @@
 window.OBS_SPOTIFY_WIDGET_CONFIG = {
-  spotifyClientId: "PUT_YOUR_SPOTIFY_CLIENT_ID_HERE",
+  spotifyClientId: "933696399a51454784d7f83d958c9d75",
   appName: "OBS Spotify Widget"
 };
