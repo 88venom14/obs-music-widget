@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OBS Spotify Widget</title>
+    <link rel="stylesheet" href="./style.css" />
+    <script src="./site-config.js"></script>
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <main id="app-shell" class="app-shell">
+      <section class="setup-panel">
+        <div class="section-block">
+          <div class="brand-row">
+            <div>
+              <p class="eyebrow">OBS Browser Source</p>
+              <h1>Spotify Widget</h1>
+            </div>
+            <span id="auth-status" class="status-pill">Не подключено</span>
+          </div>
+
+          <div id="setup-warning" class="warning hidden"></div>
+
+          <div class="actions-row auth-actions">
+            <button id="spotify-login" class="primary-button" type="button">Войти через Spotify</button>
+            <button id="spotify-logout" class="secondary-button" type="button">Сбросить доступ</button>
+          </div>
+        </div>
+
+        <div class="section-block">
+          <h2>Предпросмотр</h2>
+          <div class="preview-stage">
+            <div id="preview-widget" class="widget widget--visible">
+              <div class="art-container">
+                <img id="preview-art" src="" alt="Album Art" />
+              </div>
+              <div class="track-info">
+                <div class="track-title-wrapper">
+                  <span id="preview-title" class="track-title">Подключите Spotify</span>
+                </div>
+                <div class="track-artist-wrapper">
+                  <span id="preview-artist" class="track-artist">Текущий трек появится здесь</span>
+                </div>
+              </div>
+              <div class="visualizer paused" id="preview-visualizer" aria-hidden="true">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings-panel">
+        <div class="section-block">
+          <h2>Кастомизация</h2>
+          <div class="control-grid">
+            <label>
+              <span>Фон</span>
+              <input id="bg-color" type="color" value="#101014" />
+            </label>
+            <label>
+              <span>Прозрачность</span>
+              <input id="bg-alpha" type="range" min="0" max="1" step="0.05" value="0.75" />
+            </label>
+            <label>
+              <span>Текст</span>
+              <input id="text-color" type="color" value="#ffffff" />
+            </label>
+            <label>
+              <span>Второй текст</span>
+              <input id="muted-color" type="color" value="#8e8e93" />
+            </label>
+            <label>
+              <span>Акцент</span>
+              <input id="accent-color" type="color" value="#1db954" />
+            </label>
+            <label>
+              <span>Ширина</span>
+              <input id="widget-width" type="number" min="260" max="900" step="10" value="420" />
+            </label>
+            <label>
+              <span>Высота</span>
+              <input id="widget-height" type="number" min="70" max="180" step="5" value="90" />
+            </label>
+            <label>
+              <span>Скругление</span>
+              <input id="widget-radius" type="number" min="0" max="40" step="1" value="14" />
+            </label>
+          </div>
+
+          <label class="toggle-row">
+            <input id="hide-on-pause" type="checkbox" checked />
+            <span>Скрывать виджет на паузе</span>
+          </label>
+        </div>
+
+        <div class="section-block">
+          <h2>Ссылка для OBS</h2>
+          <textarea id="widget-url" readonly rows="4" spellcheck="false"></textarea>
+          <div class="actions-row">
+            <button id="copy-url" class="primary-button" type="button">Скопировать ссылку</button>
+            <button id="refresh-preview" class="secondary-button" type="button">Обновить предпросмотр</button>
+          </div>
+          <p class="hint">Ссылка содержит Spotify refresh token во фрагменте URL. Не публикуйте ее и не отправляйте другим людям.</p>
+        </div>
+      </section>
+    </main>
+
+    <div id="widget-root" class="widget-root hidden">
+      <div id="widget" class="widget widget--hidden">
+        <div class="art-container">
+          <img id="album-art" src="" alt="Album Art" />
+        </div>
+        <div class="track-info">
+          <div class="track-title-wrapper">
+            <span id="track-title" class="track-title"></span>
+          </div>
+          <div class="track-artist-wrapper">
+            <span id="track-artist" class="track-artist"></span>
+          </div>
+        </div>
+        <div class="visualizer paused" id="visualizer" aria-hidden="true">
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+          <span class="bar"></span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

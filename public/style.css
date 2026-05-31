@@ -1,0 +1,200 @@
+:root {
+  --bg-color: rgba(10, 10, 10, 0.75);
+  --text-main-color: #ffffff;
+  --text-muted-color: #8e8e93;
+  --accent-color: #ff4500;
+  --font-family: "SF Pro Display", "Inter", system-ui, sans-serif;
+  --border-radius-art: 10px;
+  --border-radius-widget: 14px;
+  --widget-width: 420px;
+  --widget-height: 90px;
+  --marquee-offset: 0px;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: transparent !important;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  display: grid;
+  place-items: center;
+  font-family: var(--font-family);
+}
+
+.widget {
+  width: min(var(--widget-width), 100vw);
+  height: min(var(--widget-height), 100vh);
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 66px minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px 12px 12px;
+  color: var(--text-main-color);
+  background: var(--bg-color);
+  border-radius: var(--border-radius-widget);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(16px);
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.widget--hidden {
+  pointer-events: none;
+  animation: widget-exit 0.4s ease forwards;
+}
+
+.widget--visible {
+  animation: widget-enter 0.4s ease forwards;
+}
+
+.art-container {
+  position: relative;
+  width: 66px;
+  height: 66px;
+  overflow: hidden;
+  border-radius: var(--border-radius-art);
+  background: rgba(255, 255, 255, 0.08);
+  transition: opacity 0.18s ease;
+  will-change: opacity;
+}
+
+#album-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.track-info {
+  min-width: 0;
+  transition: opacity 0.18s ease;
+  will-change: opacity;
+}
+
+.track-title-wrapper,
+.track-artist-wrapper {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.track-title {
+  display: inline-block;
+  max-width: 100%;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.18;
+  color: var(--text-main-color);
+}
+
+.track-artist {
+  display: inline-block;
+  max-width: 100%;
+  margin-top: 6px;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--text-muted-color);
+}
+
+.is-marquee {
+  max-width: none;
+  animation: marquee 8s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.visualizer {
+  display: inline-flex;
+  align-items: end;
+  justify-content: center;
+  gap: 3px;
+  width: 24px;
+  height: 20px;
+}
+
+.bar {
+  display: inline-block;
+  width: 3px;
+  height: 16px;
+  background: var(--accent-color);
+  border-radius: 2px;
+  transform-origin: bottom;
+  animation: bar-bounce 0.8s ease-in-out infinite;
+}
+
+.bar:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.bar:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.bar:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.bar:nth-child(4) {
+  animation-delay: 0.1s;
+}
+
+#visualizer.paused .bar {
+  animation-play-state: paused;
+}
+
+.fading {
+  opacity: 0;
+}
+
+@keyframes widget-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes widget-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@keyframes bar-bounce {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(0);
+  }
+  80% {
+    transform: translateX(var(--marquee-offset));
+  }
+  100% {
+    transform: translateX(var(--marquee-offset));
+  }
+}
