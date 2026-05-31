@@ -13,7 +13,7 @@ OBS Spotify Widget - это небольшой сайт для создания 
 - Показывает предпросмотр перед копированием ссылки.
 - Работает как статический сайт на GitHub Pages.
 
-<img width="1095" height="930" alt="изображение" src="https://github.com/user-attachments/assets/eebb800b-703e-49be-8b2b-a4adc091d6dc" />
+<img width="1920" height="965" alt="изображение" src="https://github.com/user-attachments/assets/286beb43-e8db-42e7-a980-aeabb3f5495a" />
 
 ## Источники музыки
 
