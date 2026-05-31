@@ -1,132 +1,66 @@
 # OBS Spotify Widget
 
-Static GitHub Pages site for creating a Spotify-powered OBS Browser Source widget.
+OBS Spotify Widget - это небольшой сайт для создания музыкального виджета в OBS. Он показывает текущий трек, исполнителя, обложку, прогресс песни и анимацию, а затем выдаёт готовую ссылку для OBS Browser Source.
 
-The end-user flow is:
+Сайт работает без установки программы и без отдельного сервера: пользователь открывает страницу, настраивает внешний вид, копирует ссылку и вставляет её в OBS.
 
-1. Open the website.
-2. Choose a source: Spotify API or Last.fm.
-3. Fill the source settings.
-4. Customize the widget and preview it.
-5. Copy the generated OBS URL.
-6. Paste that URL into OBS Browser Source.
+## Что умеет приложение
 
-No local server is required for viewers or streamers.
+- Показывает текущий трек из Spotify или Last.fm.
+- Создаёт ссылку для OBS Browser Source.
+- Позволяет менять цвета, прозрачность, размер, скругление, текст, прогресс-бар, обложку и визуалайзер.
+- Показывает предпросмотр перед копированием ссылки.
+- Работает как статический сайт на GitHub Pages.
 
-## Deploy To GitHub Pages
+## Источники музыки
 
-1. Push the repository to GitHub.
-2. Publish the `docs/` site. This repository uses `.github/workflows/pages.yml` to publish `docs/` to the `gh-pages` branch.
-3. In repository settings, enable GitHub Pages from the `gh-pages` branch.
+### Spotify API
 
-## User Spotify Setup
+Режим Spotify API получает данные напрямую из Spotify. Он может показывать точный прогресс трека и длительность песни.
 
-Spotify restricts apps in Development Mode. To avoid the site owner manually adding every user, each streamer should use their own Spotify Client ID.
+Из-за ограничений Spotify пользователю может понадобиться собственный Spotify Client ID и активный Premium на аккаунте владельца Spotify app.
 
-1. Open https://developer.spotify.com/dashboard.
-2. Sign in with the Spotify account that will be used with OBS.
-3. Create an app.
-4. Select **Web API**.
-5. Add the exact Redirect URI shown on the deployed widget website.
+### Last.fm
 
-   For this deployment:
+Режим Last.fm подходит как запасной вариант, особенно если Spotify API недоступен. Пользователь подключает Spotify scrobbling к Last.fm, а виджет читает текущий трек через Last.fm.
+
+В этом режиме прогресс трека приблизительный: Last.fm отдаёт трек и длительность, а виджет сам считает позицию с момента, когда увидел текущую песню.
+
+## Как пользоваться
+
+1. Открыть сайт:
 
    ```text
    https://88venom14.github.io/obs-music-widget/
    ```
 
-6. Save the Spotify app.
-7. Copy **Client ID** from the app settings.
-8. Do not copy or share **Client Secret**. It is not used by this GitHub Pages app.
-9. Paste Client ID into the deployed widget website and save it.
-10. Sign in with Spotify.
+2. Выбрать источник: Spotify API или Last.fm.
+3. Заполнить нужные поля для выбранного источника.
+4. Настроить внешний вид виджета.
+5. Проверить предпросмотр.
+6. Скопировать ссылку для OBS.
+7. В OBS добавить Browser Source и вставить эту ссылку.
 
-Spotify can return HTTP 403 if the owner of the Spotify app does not have an active Premium subscription. After Premium status changes, Spotify may take a few hours before API requests are allowed.
+## Рекомендуемые настройки OBS
 
-## User Last.fm Setup
-
-Last.fm mode is the fallback for users who cannot use Spotify Web API because of Premium or Development Mode restrictions. It reads the currently scrobbled track from Last.fm instead of calling Spotify.
-
-### 1. Connect Spotify Scrobbling
-
-1. Open https://www.last.fm and sign in.
-2. If you do not have a Last.fm account, create one first.
-3. Open https://www.last.fm/settings/applications.
-4. Find the **Suggested applications** / **Предлагаемые приложения** block.
-5. Click **Connect** / **Подключить** next to **Spotify Scrobbling** / **Скробблинг Spotify**.
-6. Do not choose **Spotify Playback** / **Воспроизведение в Spotify** for this widget. Playback is for listening through Last.fm; scrobbling is what sends the currently playing Spotify track to Last.fm.
-7. Allow Last.fm access to Spotify.
-8. Start playing a track in Spotify.
-9. Open your Last.fm profile and confirm that the track appears as currently playing. If it does not appear, the OBS widget will not be able to see it either.
-
-### 2. Create A Last.fm API Key
-
-1. Open https://www.last.fm/api/account/create.
-2. Fill the form:
-   - **Application name**: `OBS Spotify Widget`
-   - **Application description**: `OBS music widget`
-   - **Application homepage**: `https://88venom14.github.io/obs-music-widget/`
-   - **Callback URL**: leave empty. If Last.fm requires a value, use `https://88venom14.github.io/obs-music-widget/`
-3. Submit the form.
-4. Copy **API Key**.
-5. Do not copy or share **Shared secret**. This widget does not use it.
-
-### 3. Configure The Widget
-
-1. Open https://88venom14.github.io/obs-music-widget/.
-2. Select **Last.fm**.
-3. Paste your Last.fm username.
-4. Paste your Last.fm API Key.
-5. Click **Сохранить Last.fm**.
-6. Start playing music in Spotify.
-7. Wait until Last.fm shows the track as now playing.
-8. Customize the widget.
-9. Copy the generated OBS URL.
-10. Paste the URL into OBS Browser Source.
-
-Last.fm can lag behind Spotify by several seconds because it depends on scrobbling. Progress in Last.fm mode is estimated: the widget asks Last.fm for track duration and starts counting from the moment it first sees the `nowplaying` track. If Last.fm does not know the duration, the widget uses a 3:00 fallback. If Last.fm does not report a `nowplaying` track, the widget hides itself.
-
-## User Instructions
-
-The user opens the deployed site, chooses Spotify API or Last.fm, and fills the required source settings.
-
-After Spotify authorization, the site stores the user's refresh token in browser local storage and generates an OBS URL. The URL contains the token in the fragment part after `#`, so it is not sent to GitHub Pages. The user should still keep the URL private because anyone with it can read their current Spotify playback.
-
-OBS settings:
-
-| Setting | Value |
+| Настройка | Значение |
 |---|---|
-| URL | Generated by the website |
-| Width | Match selected widget width, default `420` |
-| Height | Match selected widget height, default `90` or `100` |
-| FPS | `30` |
-| Custom CSS | Leave blank |
-| Shutdown source when not visible | Enabled |
-| Refresh browser when scene becomes active | Enabled |
+| URL | Ссылка, созданная на сайте |
+| Width | Как в настройках виджета |
+| Height | Как в настройках виджета |
+| FPS | 30 |
+| Custom CSS | Оставить пустым |
+| Shutdown source when not visible | Включить |
+| Refresh browser when scene becomes active | Включить |
 
-## How It Works
+## Как это примерно работает
 
-- The site uses Spotify Authorization Code with PKCE, so no `client_secret` is used in the browser.
-- The dashboard mode handles login, customization, preview, and link generation.
-- The OBS widget mode is the same static page opened with `?widget=1#data=...`.
-- The widget refreshes Spotify access tokens in the OBS browser source and polls Spotify's currently-playing endpoint directly.
+На основной странице пользователь выбирает источник музыки и настраивает виджет. После этого сайт создаёт специальную OBS-ссылку. В этой ссылке сохранены настройки внешнего вида и данные, нужные для чтения текущего трека.
 
-## Local Development
+Когда OBS открывает эту ссылку, сайт запускается в режиме виджета: он скрывает панель настроек, периодически проверяет текущий трек и обновляет отображение.
 
-You can open [docs/index.html](./docs/index.html) through a local static server. OAuth requires a Redirect URI that exactly matches the URL in the Spotify dashboard.
+## Важно
 
-For future AI/chat sessions, read [AI_HANDOFF.md](./AI_HANDOFF.md) first. It summarizes the current architecture, decisions, constraints, and verification state.
+Ссылку для OBS не стоит публиковать или отправлять другим людям. В Spotify API режиме она может содержать чувствительные данные во фрагменте URL.
 
-Quick syntax checks:
-
-```bash
-npm test
-npm run lint
-npm run build
-```
-
-The old Node backend is still present for local/server deployments, but the GitHub Pages product lives in `docs/`.
-
-## Security Note
-
-The generated OBS URL includes a Spotify refresh token in the URL fragment. It is practical for a no-backend GitHub Pages deployment, but it must be treated as private. If a URL is leaked, the user should remove app access from their Spotify account and sign in again.
+Client Secret от Spotify или Last.fm этому сайту не нужен. Его нельзя вставлять на сайт и нельзя отправлять другим людям.
