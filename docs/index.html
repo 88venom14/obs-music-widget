@@ -22,38 +22,75 @@
 
           <div id="setup-warning" class="warning hidden"></div>
 
-          <div class="client-id-box">
-            <label class="field-row">
-              <span>Spotify Client ID</span>
-              <input id="spotify-client-id" type="text" autocomplete="off" spellcheck="false" placeholder="Вставьте Client ID из Spotify Developer Dashboard" />
+          <div class="source-switch" role="radiogroup" aria-label="Источник трека">
+            <label>
+              <input id="provider-spotify" name="provider" type="radio" value="spotify" checked />
+              <span>Spotify API</span>
             </label>
-            <div class="actions-row compact-actions">
-              <button id="save-client-id" class="secondary-button" type="button">Сохранить Client ID</button>
+            <label>
+              <input id="provider-lastfm" name="provider" type="radio" value="lastfm" />
+              <span>Last.fm</span>
+            </label>
+          </div>
+
+          <div id="spotify-provider-settings">
+            <div class="client-id-box">
+              <label class="field-row">
+                <span>Spotify Client ID</span>
+                <input id="spotify-client-id" type="text" autocomplete="off" spellcheck="false" placeholder="Вставьте Client ID из Spotify Developer Dashboard" />
+              </label>
+              <div class="actions-row compact-actions">
+                <button id="save-client-id" class="secondary-button" type="button">Сохранить Client ID</button>
+              </div>
+
+              <label class="field-row">
+                <span>Redirect URI для Spotify app</span>
+                <input id="redirect-uri" type="text" readonly spellcheck="false" />
+              </label>
+              <div class="actions-row compact-actions">
+                <button id="copy-redirect-uri" class="secondary-button" type="button">Скопировать Redirect URI</button>
+              </div>
+
+              <details class="setup-guide">
+                <summary>Где взять Client ID</summary>
+                <ol>
+                  <li>Откройте Spotify Developer Dashboard.</li>
+                  <li>Создайте app и выберите Web API.</li>
+                  <li>Добавьте Redirect URI, показанный выше.</li>
+                  <li>Скопируйте Client ID из настроек app и вставьте сюда.</li>
+                  <li>Client Secret не вставляйте и никому не отправляйте.</li>
+                </ol>
+              </details>
             </div>
 
+            <div class="actions-row auth-actions">
+              <button id="spotify-login" class="primary-button" type="button">Войти через Spotify</button>
+              <button id="spotify-logout" class="secondary-button" type="button">Сбросить доступ</button>
+            </div>
+          </div>
+
+          <div id="lastfm-provider-settings" class="client-id-box hidden">
             <label class="field-row">
-              <span>Redirect URI для Spotify app</span>
-              <input id="redirect-uri" type="text" readonly spellcheck="false" />
+              <span>Last.fm username</span>
+              <input id="lastfm-username" type="text" autocomplete="off" spellcheck="false" placeholder="Ваш Last.fm username" />
+            </label>
+            <label class="field-row">
+              <span>Last.fm API key</span>
+              <input id="lastfm-api-key" type="text" autocomplete="off" spellcheck="false" placeholder="API key из Last.fm API account" />
             </label>
             <div class="actions-row compact-actions">
-              <button id="copy-redirect-uri" class="secondary-button" type="button">Скопировать Redirect URI</button>
+              <button id="save-lastfm" class="secondary-button" type="button">Сохранить Last.fm</button>
             </div>
 
             <details class="setup-guide">
-              <summary>Где взять Client ID</summary>
+              <summary>Как настроить Last.fm</summary>
               <ol>
-                <li>Откройте Spotify Developer Dashboard.</li>
-                <li>Создайте app и выберите Web API.</li>
-                <li>Добавьте Redirect URI, показанный выше.</li>
-                <li>Скопируйте Client ID из настроек app и вставьте сюда.</li>
-                <li>Client Secret не вставляйте и никому не отправляйте.</li>
+                <li>Создайте Last.fm аккаунт.</li>
+                <li>Подключите Spotify scrobbling в настройках Last.fm.</li>
+                <li>Создайте API account на Last.fm и скопируйте API key.</li>
+                <li>Вставьте Last.fm username и API key сюда.</li>
               </ol>
             </details>
-          </div>
-
-          <div class="actions-row auth-actions">
-            <button id="spotify-login" class="primary-button" type="button">Войти через Spotify</button>
-            <button id="spotify-logout" class="secondary-button" type="button">Сбросить доступ</button>
           </div>
         </div>
 

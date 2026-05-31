@@ -7,8 +7,8 @@ This document is for the next AI/chat session. It explains what this project is,
 The project is now intended to be a **static GitHub Pages website** where an end user can:
 
 1. Open the website.
-2. Paste their own Spotify Client ID.
-3. Sign in with Spotify.
+2. Choose Spotify API or Last.fm as the source.
+3. Fill the source settings.
 4. Preview the OBS music widget.
 5. Customize widget appearance.
 6. Copy a generated OBS Browser Source URL.
@@ -75,7 +75,9 @@ https://yourname.github.io/obs-music-widget/
 
 Responsibilities:
 
+- Let the user switch between Spotify API and Last.fm.
 - Store the user's Spotify Client ID in localStorage.
+- Store Last.fm username/API key in localStorage when Last.fm mode is selected.
 - Start Spotify OAuth PKCE login.
 - Store auth data in browser localStorage.
 - Show live/mock preview.
@@ -223,6 +225,5 @@ Useful next improvements:
 
 - Add automated browser tests for `docs/` with Playwright or a fixed browser-act setup.
 - Add import/export of customization presets.
-- Add a clearer deployed-site setup screen for the site owner if `spotifyClientId` is missing.
 - Add optional token revocation/help instructions for users who leak an OBS URL.
 - Consider a backend deployment option if the user later wants better token security than a static GitHub Pages app can provide.

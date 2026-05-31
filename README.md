@@ -5,12 +5,11 @@ Static GitHub Pages site for creating a Spotify-powered OBS Browser Source widge
 The end-user flow is:
 
 1. Open the website.
-2. Create a personal Spotify app and copy its Client ID.
-3. Paste the Client ID into the website.
-4. Sign in with Spotify.
-5. Customize the widget and preview it.
-6. Copy the generated OBS URL.
-7. Paste that URL into OBS Browser Source.
+2. Choose a source: Spotify API or Last.fm.
+3. Fill the source settings.
+4. Customize the widget and preview it.
+5. Copy the generated OBS URL.
+6. Paste that URL into OBS Browser Source.
 
 No local server is required for viewers or streamers.
 
@@ -44,9 +43,24 @@ Spotify restricts apps in Development Mode. To avoid the site owner manually add
 
 Spotify can return HTTP 403 if the owner of the Spotify app does not have an active Premium subscription. After Premium status changes, Spotify may take a few hours before API requests are allowed.
 
+## User Last.fm Setup
+
+Last.fm mode is the fallback for users who cannot use Spotify Web API because of Premium or Development Mode restrictions. It reads the currently scrobbled track from Last.fm instead of calling Spotify.
+
+1. Open https://www.last.fm and create or sign in to an account.
+2. Connect Spotify scrobbling in Last.fm settings.
+3. Open https://www.last.fm/api/account/create and create an API account.
+4. Copy the Last.fm **API Key**. The shared secret is not used by this widget.
+5. Open the widget website and select **Last.fm**.
+6. Paste Last.fm username and API key.
+7. Save Last.fm settings.
+8. Copy the generated OBS URL.
+
+Last.fm can lag behind Spotify by several seconds because it depends on scrobbling. If Last.fm does not report a `nowplaying` track, the widget hides itself.
+
 ## User Instructions
 
-The user opens the deployed site, pastes their Spotify Client ID, and clicks **Войти через Spotify**.
+The user opens the deployed site, chooses Spotify API or Last.fm, and fills the required source settings.
 
 After Spotify authorization, the site stores the user's refresh token in browser local storage and generates an OBS URL. The URL contains the token in the fragment part after `#`, so it is not sent to GitHub Pages. The user should still keep the URL private because anyone with it can read their current Spotify playback.
 

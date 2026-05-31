@@ -4,9 +4,12 @@
   const AUTHORIZE_ENDPOINT = "https://accounts.spotify.com/authorize";
   const TOKEN_ENDPOINT = "https://accounts.spotify.com/api/token";
   const CURRENTLY_PLAYING_ENDPOINT = "https://api.spotify.com/v1/me/player/currently-playing?additional_types=track";
+  const LASTFM_ENDPOINT = "https://ws.audioscrobbler.com/2.0/";
   const SCOPE = "user-read-currently-playing";
+  const PROVIDER_STORAGE_KEY = "obs_spotify_widget_provider";
   const STORAGE_KEY = "obs_spotify_widget_auth";
   const CLIENT_ID_STORAGE_KEY = "obs_spotify_widget_client_id";
+  const LASTFM_STORAGE_KEY = "obs_spotify_widget_lastfm";
   const VERIFIER_KEY = "obs_spotify_widget_pkce_verifier";
   const STATE_KEY = "obs_spotify_widget_oauth_state";
   const REDIRECT_KEY = "obs_spotify_widget_redirect_uri";
@@ -18,6 +21,8 @@
     );
 
   const state = {
+    provider: "spotify",
+    lastfmConfig: null,
     previewAuth: null,
     previewTrackKey: "",
     widgetTrackKey: "",
@@ -39,6 +44,11 @@
     return String(localStorage.getItem(CLIENT_ID_STORAGE_KEY) || "").trim();
   }
 
+  function getStoredProvider() {
+    const provider = localStorage.getItem(PROVIDER_STORAGE_KEY);
+    return provider === "lastfm" ? "lastfm" : "spotify";
+  }
+
   function getClientId() {
     return getStoredClientId() || getSiteClientId();
   }
@@ -49,6 +59,26 @@
 
   function isClientConfigured() {
     return isUsableClientId(getClientId());
+  }
+
+  function loadLastfmConfig() {
+    try {
+      const raw = localStorage.getItem(LASTFM_STORAGE_KEY);
+      const config = raw ? JSON.parse(raw) : null;
+      if (!config?.username || !config?.apiKey) {
+        return null;
+      }
+      return {
+        username: String(config.username).trim(),
+        apiKey: String(config.apiKey).trim()
+      };
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function isLastfmConfigured() {
+    return Boolean(state.lastfmConfig?.username && state.lastfmConfig?.apiKey);
   }
 
   function getRedirectUri() {
@@ -221,6 +251,42 @@
     hideWarning();
   }
 
+  function saveLastfmConfig() {
+    const config = {
+      username: controls.lastfmUsername.value.trim(),
+      apiKey: controls.lastfmApiKey.value.trim()
+    };
+
+    if (!config.username || !config.apiKey) {
+      showWarning("Укажите Last.fm username и Last.fm API key.");
+      return;
+    }
+
+    localStorage.setItem(LASTFM_STORAGE_KEY, JSON.stringify(config));
+    state.lastfmConfig = config;
+    setProvider("lastfm");
+    updateWidgetUrl();
+    void refreshPreview();
+    hideWarning();
+  }
+
+  function setProvider(provider) {
+    state.provider = provider === "lastfm" ? "lastfm" : "spotify";
+    localStorage.setItem(PROVIDER_STORAGE_KEY, state.provider);
+    state.previewAuth = state.provider === "spotify" ? loadAuth() : null;
+    updateProviderUi();
+    updateAuthUi();
+    updateWidgetUrl();
+  }
+
+  function updateProviderUi() {
+    const isLastfm = state.provider === "lastfm";
+    controls.providerSpotify.checked = !isLastfm;
+    controls.providerLastfm.checked = isLastfm;
+    controls.spotifyProviderSettings.classList.toggle("hidden", isLastfm);
+    controls.lastfmProviderSettings.classList.toggle("hidden", !isLastfm);
+  }
+
   async function handleAuthCallback() {
     const url = new URL(window.location.href);
     const code = url.searchParams.get("code");
@@ -367,6 +433,50 @@
     };
   }
 
+  async function fetchLastfmTrack(config) {
+    const url = new URL(LASTFM_ENDPOINT);
+    url.searchParams.set("method", "user.getrecenttracks");
+    url.searchParams.set("user", config.username);
+    url.searchParams.set("api_key", config.apiKey);
+    url.searchParams.set("format", "json");
+    url.searchParams.set("limit", "1");
+
+    const response = await fetch(url.toString(), { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(`Last.fm request failed with HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (data.error) {
+      throw new Error(`Last.fm: ${data.message || `error ${data.error}`}`);
+    }
+
+    const rawTracks = data?.recenttracks?.track;
+    const track = Array.isArray(rawTracks) ? rawTracks[0] : rawTracks;
+    if (!track) {
+      return { state: "stopped", track: null };
+    }
+
+    const isNowPlaying = track["@attr"]?.nowplaying === "true";
+    if (!isNowPlaying) {
+      return { state: "stopped", track: null };
+    }
+
+    const images = Array.isArray(track.image) ? track.image : [];
+    const artUrl = [...images].reverse().find((image) => image?.["#text"])?.["#text"] || "";
+
+    return {
+      state: "playing",
+      track: {
+        title: track.name || "Unknown Track",
+        artist: track.artist?.["#text"] || track.artist?.name || "Unknown Artist",
+        album: track.album?.["#text"] || "",
+        artUrl,
+        trackUrl: track.url || ""
+      }
+    };
+  }
+
   function hexToRgba(hex, alpha) {
     const value = hex.replace("#", "");
     const red = parseInt(value.slice(0, 2), 16);
@@ -485,6 +595,22 @@
       return;
     }
 
+    if (state.provider === "lastfm") {
+      if (!isLastfmConfigured()) {
+        renderMockPreview();
+        return;
+      }
+
+      try {
+        const payload = await fetchLastfmTrack(state.lastfmConfig);
+        renderWidget(preview, payload, getSettings(), "previewTrackKey");
+        hideWarning();
+      } catch (error) {
+        showWarning(`Не удалось прочитать текущий трек Last.fm: ${error.message}`);
+      }
+      return;
+    }
+
     if (!state.previewAuth) {
       renderMockPreview();
       return;
@@ -515,6 +641,25 @@
       return;
     }
 
+    if (state.provider === "lastfm") {
+      if (!isLastfmConfigured()) {
+        controls.widgetUrl.value = "Сначала укажите Last.fm username и API key.";
+        controls.copyUrl.disabled = true;
+        return;
+      }
+
+      const payload = {
+        v: 2,
+        provider: "lastfm",
+        lastfm: state.lastfmConfig,
+        settings: getSettings()
+      };
+
+      controls.widgetUrl.value = `${getBaseWidgetUrl()}#data=${encodeData(payload)}`;
+      controls.copyUrl.disabled = false;
+      return;
+    }
+
     const auth = state.previewAuth;
     if (!auth?.refreshToken) {
       controls.widgetUrl.value = isClientConfigured() ? "Сначала войдите через Spotify." : "Сначала вставьте Spotify Client ID.";
@@ -534,6 +679,15 @@
   }
 
   function updateAuthUi() {
+    if (state.provider === "lastfm") {
+      const configured = isLastfmConfigured();
+      controls.authStatus.textContent = configured ? "Last.fm подключен" : "Last.fm не настроен";
+      controls.authStatus.classList.toggle("connected", configured);
+      controls.login.disabled = true;
+      controls.logout.disabled = true;
+      return;
+    }
+
     const connected = Boolean(state.previewAuth?.refreshToken);
     controls.authStatus.textContent = connected ? "Spotify подключен" : "Не подключено";
     controls.authStatus.classList.toggle("connected", connected);
@@ -569,6 +723,28 @@
       data = parseWidgetData();
     } catch (error) {
       console.error("Invalid widget URL data.", error);
+      return;
+    }
+
+    if (data?.provider === "lastfm") {
+      if (!data?.lastfm?.username || !data?.lastfm?.apiKey || !data?.settings) {
+        console.error("Widget URL is missing Last.fm data.");
+        return;
+      }
+
+      applySettings(data.settings);
+
+      const tick = async () => {
+        try {
+          const payload = await fetchLastfmTrack(data.lastfm);
+          renderWidget(widget, payload, data.settings, "widgetTrackKey");
+        } catch (error) {
+          console.error("Last.fm widget polling failed.", error);
+        }
+      };
+
+      await tick();
+      state.widgetTimer = window.setInterval(tick, POLLING_INTERVAL_MS);
       return;
     }
 
@@ -610,10 +786,17 @@
   function bindDashboard() {
     controls.authStatus = document.getElementById("auth-status");
     controls.warning = document.getElementById("setup-warning");
+    controls.providerSpotify = document.getElementById("provider-spotify");
+    controls.providerLastfm = document.getElementById("provider-lastfm");
+    controls.spotifyProviderSettings = document.getElementById("spotify-provider-settings");
+    controls.lastfmProviderSettings = document.getElementById("lastfm-provider-settings");
     controls.clientIdInput = document.getElementById("spotify-client-id");
     controls.saveClientId = document.getElementById("save-client-id");
     controls.redirectUri = document.getElementById("redirect-uri");
     controls.copyRedirectUri = document.getElementById("copy-redirect-uri");
+    controls.lastfmUsername = document.getElementById("lastfm-username");
+    controls.lastfmApiKey = document.getElementById("lastfm-api-key");
+    controls.saveLastfm = document.getElementById("save-lastfm");
     controls.login = document.getElementById("spotify-login");
     controls.logout = document.getElementById("spotify-logout");
     controls.bgColor = document.getElementById("bg-color");
@@ -646,6 +829,17 @@
 
     controls.clientIdInput.value = getStoredClientId() || (isUsableClientId(getSiteClientId()) ? getSiteClientId() : "");
     controls.redirectUri.value = getRedirectUri();
+    controls.lastfmUsername.value = state.lastfmConfig?.username || "";
+    controls.lastfmApiKey.value = state.lastfmConfig?.apiKey || "";
+
+    controls.providerSpotify.addEventListener("change", () => {
+      setProvider("spotify");
+      void refreshPreview();
+    });
+    controls.providerLastfm.addEventListener("change", () => {
+      setProvider("lastfm");
+      void refreshPreview();
+    });
 
     controls.saveClientId.addEventListener("click", saveUserClientId);
     controls.clientIdInput.addEventListener("keydown", (event) => {
@@ -673,6 +867,8 @@
         showWarning("Не удалось скопировать автоматически. Скопируйте выделенный Redirect URI вручную.");
       }
     });
+
+    controls.saveLastfm.addEventListener("click", saveLastfmConfig);
 
     controls.login.addEventListener("click", beginSpotifyLogin);
     controls.logout.addEventListener("click", () => {
@@ -740,14 +936,19 @@
   }
 
   async function initDashboard() {
+    state.provider = getStoredProvider();
+    state.lastfmConfig = loadLastfmConfig();
     bindDashboard();
+    updateProviderUi();
 
-    if (!isClientConfigured()) {
+    if (state.provider === "spotify" && !isClientConfigured()) {
       showWarning("Вставьте свой Spotify Client ID и добавьте показанный Redirect URI в настройки Spotify app.");
+    } else if (state.provider === "lastfm" && !isLastfmConfigured()) {
+      showWarning("Укажите Last.fm username и API key, чтобы использовать режим без Spotify Premium.");
     }
 
     await handleAuthCallback();
-    state.previewAuth = loadAuth();
+    state.previewAuth = state.provider === "spotify" ? loadAuth() : null;
     updateAuthUi();
     applySettings(getSettings());
     updateWidgetUrl();
