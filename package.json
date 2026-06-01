@@ -4,7 +4,7 @@
   "description": "GitHub Pages OBS Browser Source widget powered by Spotify and Last.fm currently playing data.",
   "scripts": {
     "site:check": "node --check docs/js/core/widget-core.js",
-    "test": "npm run site:check && node --test --require ts-node/register tests/**/*.test.ts",
+    "test": "npm run site:check && node --test --require ts-node/register tests/*.test.ts",
     "lint": "tsc --noEmit",
     "lint:js": "eslint \"docs/**/*.js\"",
     "lint:all": "npm run lint && npm run lint:js"
