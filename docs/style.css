@@ -34,8 +34,6 @@
   --border-color: rgba(255, 255, 255, 0);
   --visualizer-height: 20px;
   --visualizer-bar-width: 3px;
-  /* 4 bars + 3 inner 3px gaps; matches the real .visualizer width so the grid
-     column tracks the bar-width setting instead of being clipped. */
   --visualizer-width: calc(var(--visualizer-bar-width) * 4 + 9px);
   --visualizer-speed: 0.8s;
   --marquee-speed: 8s;
@@ -414,7 +412,6 @@ input[type="color"] {
   cursor: pointer;
 }
 
-/* Native dropdown list: paint options dark instead of the default gray popup. */
 .bg-section select option,
 .control-grid select option {
   background: #0e1126;
@@ -427,8 +424,6 @@ input[type="color"] {
   color: #07101a;
 }
 
-/* Custom dropdown (replaces the native option popup, which cannot be rounded).
-   The native <select> stays in the DOM, visually hidden, as the value source. */
 .select {
   position: relative;
   width: 100%;
@@ -599,8 +594,6 @@ body.widget-mode {
   height: auto;
   box-sizing: border-box;
   display: grid;
-  /* Text column fills the available width (1fr); the visualizer sits in the right
-     column, sized to its bar width (--visualizer-width) so the bars never clip. */
   grid-template-columns: var(--art-size) minmax(0, 1fr) var(--visualizer-width);
   align-items: center;
   gap: var(--widget-gap);
@@ -617,9 +610,6 @@ body.widget-mode {
   transform: translateY(10px);
 }
 
-/* Background layers: ::before paints the fill (color / gradient / image / blurred
-   album art), ::after is a readability tint for image and album-art modes. Both
-   sit behind the widget content (children are lifted to z-index 1). */
 .widget::before,
 .widget::after {
   content: "";
@@ -643,8 +633,6 @@ body.widget-mode {
 }
 
 .widget--bg-image::before {
-  /* Extend past the edges so the blur does not reveal soft transparent borders;
-     the widget's overflow:hidden clips it back to the rounded shape. */
   inset: calc(-1 * var(--bg-blur-spread));
   background: var(--bg-image-url) center / cover no-repeat;
   filter: blur(var(--bg-image-blur));
@@ -770,8 +758,6 @@ body.widget-mode {
   height: 100%;
   border-radius: inherit;
   background: var(--accent-color);
-  /* Animated via transform: scaleX() every animation frame (composited, sub-pixel
-     smooth). A CSS transition here would only add lag and fight the per-frame paint. */
   transform: scaleX(0);
   transform-origin: left center;
   will-change: transform;

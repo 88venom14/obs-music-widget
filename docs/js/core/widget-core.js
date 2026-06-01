@@ -1,10 +1,3 @@
-// Shared pure helpers for the GitHub Pages widget.
-//
-// This module is loaded as a plain <script> before app.js (it assigns
-// globalThis.WidgetCore) and is also require()'d by the Node test suite.
-// Keep everything here free of DOM and browser-only side effects so it stays
-// testable. Only platform globals available in both environments are used
-// (btoa/atob, TextEncoder/TextDecoder, URL, JSON, Math, Date).
 (function (root, factory) {
   "use strict";
   const api = factory();
@@ -82,9 +75,6 @@
     return { ...DEFAULT_SETTINGS, ...(settings || {}) };
   }
 
-  // Turns a user-supplied background URL into a safe CSS url() value.
-  // Only http/https absolute URLs are allowed; anything else becomes "none".
-  // Quotes and backslashes are escaped so the value cannot break out of url("...").
   function safeCssUrl(url) {
     if (typeof url !== "string" || url.trim() === "") {
       return "none";

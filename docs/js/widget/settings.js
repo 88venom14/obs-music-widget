@@ -1,5 +1,3 @@
-// Reads customization controls into a settings object and applies them as CSS
-// variables on the document. Also handles custom CSS injection and Google Fonts.
 import { state, controls } from "../core/state.js";
 import { customCssStyleId } from "../core/config.js";
 import {
@@ -101,9 +99,6 @@ export function syncWidgetSizeInputs(sourceInput) {
   }
 }
 
-// Inject (or update) the Google Fonts stylesheet and return the family name parsed
-// from the URL. Restricted to fonts.googleapis.com so widget-link data can't inject
-// an arbitrary stylesheet.
 function loadGoogleFont(url) {
   let parsed;
   try {

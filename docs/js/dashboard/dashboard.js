@@ -1,5 +1,3 @@
-// Dashboard mode: wires up all DOM controls/listeners and runs the setup flow
-// (provider detection, OAuth callback, initial preview, polling).
 import { state, controls, preview } from "../core/state.js";
 import { PLACEHOLDER_ART, POLLING_INTERVAL_MS } from "../core/config.js";
 import {
@@ -255,8 +253,6 @@ function bindDashboard() {
   enhanceSelect(controls.fontFamily);
   enhanceSelect(controls.textAlign);
 
-  // Color swatches sit inside <label>, so clicking the label text would forward
-  // to the input and open the OS color picker. Only let the swatch itself open it.
   for (const colorInput of document.querySelectorAll('input[type="color"]')) {
     const label = colorInput.closest("label");
     if (label) {

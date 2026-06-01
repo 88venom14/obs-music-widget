@@ -1,5 +1,3 @@
-// The rendering engine shared by the dashboard preview and the OBS widget:
-// album art, marquee, progress bar/ticker, and the per-poll render entry points.
 import { state, preview } from "../core/state.js";
 import { PLACEHOLDER_ART } from "../core/config.js";
 import { normalizeSettings } from "../core/core.js";
@@ -51,8 +49,6 @@ function refreshTextLayout(target) {
   updateMarquee(target.artist, target.artistWrapper);
 }
 
-// Signature of everything that can change whether/how the marquee overflows.
-// Used to skip redundant reflow-triggering recomputes on unchanged polls.
 function getTextLayoutKey(target, settings) {
   const s = normalizeSettings(settings);
   return [
@@ -93,8 +89,6 @@ function getProgressMs(payload) {
   return Math.min(Math.max(baseProgress + liveOffset, 0), durationMs);
 }
 
-// Animate the bar via scaleX (composited, sub-pixel smooth) instead of width,
-// which the browser snaps to whole pixels and makes a slow bar visibly step.
 function setProgressFill(fill, fraction) {
   fill.style.transform = `scaleX(${Math.min(Math.max(fraction, 0), 1)})`;
 }
@@ -128,9 +122,6 @@ function updateProgress(target, payload) {
   target.time.style.display = settings.showTime ? "" : "none";
 }
 
-// Per-frame painter: advances the bar smoothly every animation frame and only
-// rewrites the time label when the whole-second value actually changes, so the
-// counter ticks evenly instead of jittering with setInterval drift.
 function paintProgressFrame(target) {
   const payload = target.lastPayload;
   if (!target.progressFill || !target.time || !payload?.track?.durationMs) {
@@ -160,8 +151,6 @@ function ensureProgressTicker(target) {
       return;
     }
 
-    // Only the playing state advances; paused/stopped progress is static and a
-    // hidden widget needs no painting at all.
     if (target.lastPayload.state !== "playing" || target.root.classList.contains("widget--hidden")) {
       return;
     }
@@ -228,8 +217,6 @@ export function renderWidget(target, payload, settings, trackKeyName) {
 
 export function renderMockPreview() {
   const durationMs = 244000;
-  // Anchor the demo clock once and derive position from real elapsed time so the
-  // preview bar flows continuously (and loops) instead of snapping back on each poll.
   if (!state.mockStartedAt) {
     state.mockStartedAt = Date.now() - 78000;
   }

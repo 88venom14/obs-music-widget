@@ -1,5 +1,3 @@
-// Last.fm source: reads the current track via user.getrecenttracks, looks up
-// duration via track.getInfo, and estimates progress locally.
 import { LASTFM_ENDPOINT, LASTFM_FALLBACK_DURATION_MS, LASTFM_DURATION_CACHE_LIMIT } from "../core/config.js";
 import { state } from "../core/state.js";
 import { lastfmCacheKey } from "../core/core.js";
@@ -40,8 +38,6 @@ async function fetchLastfmDuration(config, artist, title) {
     const duration = Number(data?.track?.duration || 0);
     return rememberLastfmDuration(cacheKey, duration > 0 ? duration : LASTFM_FALLBACK_DURATION_MS);
   } catch (_error) {
-    // Don't cache transient failures: return the fallback for now and retry
-    // on the next poll so the real duration can be picked up once the API recovers.
     return LASTFM_FALLBACK_DURATION_MS;
   }
 }

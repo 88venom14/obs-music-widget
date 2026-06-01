@@ -1,5 +1,3 @@
-// Provider selection plus Spotify client-id / Last.fm credentials and their
-// localStorage persistence.
 import {
   SITE_CONFIG,
   CLIENT_ID_PLACEHOLDER,

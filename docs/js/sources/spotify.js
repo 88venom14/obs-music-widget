@@ -1,5 +1,3 @@
-// Spotify Authorization Code + PKCE flow, token refresh, and currently-playing
-// fetch. No client secret is used or stored.
 import {
   AUTHORIZE_ENDPOINT,
   TOKEN_ENDPOINT,

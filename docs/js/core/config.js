@@ -1,6 +1,3 @@
-// App-wide constants: endpoints, storage keys, polling/cache limits, and the
-// inline placeholder cover art. No imports (leaf module).
-
 export const SITE_CONFIG = window.OBS_SPOTIFY_WIDGET_CONFIG || {};
 export const CLIENT_ID_PLACEHOLDER = "PUT_YOUR_SPOTIFY_CLIENT_ID_HERE";
 export const AUTHORIZE_ENDPOINT = "https://accounts.spotify.com/authorize";

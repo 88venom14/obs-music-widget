@@ -1,5 +1,3 @@
-// Builds the OBS Browser Source URL with the encoded settings/credentials
-// fragment and reflects readiness state into the dashboard output controls.
 import { state, controls } from "../core/state.js";
 import { encodeData } from "../core/core.js";
 import { isLastfmConfigured, isClientConfigured } from "../sources/credentials.js";

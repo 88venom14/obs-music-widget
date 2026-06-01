@@ -1,5 +1,3 @@
-// Widget mode (?widget=1): reads the config from the URL fragment, applies
-// settings, and polls Spotify or Last.fm directly inside the OBS browser source.
 import { state, widget } from "../core/state.js";
 import { POLLING_INTERVAL_MS, PLACEHOLDER_ART } from "../core/config.js";
 import { decodeData } from "../core/core.js";

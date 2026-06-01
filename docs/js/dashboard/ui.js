@@ -1,5 +1,3 @@
-// Small dashboard UI helpers: provider/auth status, warnings, control-group
-// visibility, and the custom styled <select> enhancement.
 import { state, controls } from "../core/state.js";
 import { isLastfmConfigured, isClientConfigured } from "../sources/credentials.js";
 
@@ -51,9 +49,6 @@ export function updateFontControlsVisibility() {
   controls.fontCustomControls.classList.toggle("hidden", controls.fontFamily.value !== "custom");
 }
 
-// Replace a native <select> with a custom, fully styleable dropdown while keeping
-// the original element in the DOM as the value source (so getSettings, the input
-// listeners, and the OBS URL keep working unchanged).
 export function enhanceSelect(select) {
   if (!select || select.dataset.enhanced) {
     return;

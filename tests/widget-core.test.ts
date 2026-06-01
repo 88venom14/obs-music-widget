@@ -1,9 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-// widget-core.js is a browser UMD module shared with docs/app.js. It exposes a
-// CommonJS export, so require() avoids TypeScript module resolution for plain JS.
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const core = require("../docs/js/core/widget-core.js");
 
 test("hexToRgba converts hex and applies alpha", () => {
@@ -15,7 +12,6 @@ test("normalizeSettings fills defaults and keeps overrides", () => {
   const result = core.normalizeSettings({ widgetWidth: 500, fontFamily: "mono" });
   assert.equal(result.widgetWidth, 500);
   assert.equal(result.fontFamily, "mono");
-  // untouched default
   assert.equal(result.widgetHeight, core.DEFAULT_SETTINGS.widgetHeight);
 });
 
@@ -40,10 +36,8 @@ test("safeCssUrl rejects dangerous or invalid input", () => {
 });
 
 test("safeCssUrl cannot break out of url()", () => {
-  // A URL crafted to inject extra CSS must stay inside the quoted url().
   const result = core.safeCssUrl('https://example.com/a.png");}body{display:none');
   assert.ok(result.startsWith('url("https://example.com/'));
-  // Any quote that survives parsing is backslash-escaped.
   assert.ok(!/[^\\]"[^)]/.test(result.slice(4)));
 });
 
@@ -104,7 +98,6 @@ test("spotifyPlaybackToPayload falls back when fields are missing", () => {
 
 test("lastfmCacheKey is lowercased and collision-resistant", () => {
   assert.equal(core.lastfmCacheKey("Artist", "Title"), `artist\u0000title`);
-  // The separator prevents "a b"/"c" colliding with "a"/"b c".
   assert.notEqual(core.lastfmCacheKey("a b", "c"), core.lastfmCacheKey("a", "b c"));
 });
 
