@@ -1,5 +1,8 @@
+.claude/
 node_modules/
 dist/
 .env
 npm-debug.log*
 *.tsbuildinfo
+AI_HANDOFF.md
+DEPLOYMENT_MAP.md

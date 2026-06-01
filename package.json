@@ -1,31 +1,27 @@
 {
   "name": "obs-music-widget",
   "version": "1.0.0",
-  "description": "GitHub Pages OBS Browser Source widget powered by Spotify currently playing data.",
-  "main": "dist/server.js",
+  "description": "GitHub Pages OBS Browser Source widget powered by Spotify and Last.fm currently playing data.",
   "scripts": {
-    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
-    "dev": "ts-node src/server.ts",
-    "build": "npm run clean && tsc",
-    "start": "node dist/server.js",
-    "site:check": "node --check docs/app.js",
+    "site:check": "node --check docs/js/core/widget-core.js",
     "test": "npm run site:check && node --test --require ts-node/register tests/**/*.test.ts",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "lint:js": "eslint \"docs/**/*.js\"",
+    "lint:all": "npm run lint && npm run lint:js"
   },
   "keywords": [
     "obs",
     "spotify",
-    "websocket",
+    "lastfm",
     "widget"
   ],
   "license": "MIT",
-  "dependencies": {
-    "dotenv": "^16.4.7",
-    "ws": "^8.18.0"
-  },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^20.17.10",
-    "@types/ws": "^8.5.13",
+    "eslint": "^10.4.1",
+    "eslint-plugin-import-x": "^4.16.2",
+    "globals": "^17.6.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2"
   }

@@ -34,6 +34,9 @@
   --border-color: rgba(255, 255, 255, 0);
   --visualizer-height: 20px;
   --visualizer-bar-width: 3px;
+  /* 4 bars + 3 inner 3px gaps; matches the real .visualizer width so the grid
+     column tracks the bar-width setting instead of being clipped. */
+  --visualizer-width: calc(var(--visualizer-bar-width) * 4 + 9px);
   --visualizer-speed: 0.8s;
   --marquee-speed: 8s;
   --marquee-offset: 0px;
@@ -591,12 +594,14 @@ body.widget-mode {
 }
 
 .widget {
-  width: min(max(var(--widget-width), calc(var(--art-size) + var(--visualizer-bar-width) * 4 + var(--widget-gap) * 2 + var(--widget-padding-x) * 2 + 160px)), 100vw);
+  width: min(max(var(--widget-width), calc(var(--art-size) + var(--visualizer-width) + var(--widget-gap) * 2 + var(--widget-padding-x) * 2 + 160px)), 100vw);
   min-height: min(var(--widget-height), 100vh);
   height: auto;
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: var(--art-size) minmax(0, 1fr) 28px;
+  /* Text column fills the available width (1fr); the visualizer sits in the right
+     column, sized to its bar width (--visualizer-width) so the bars never clip. */
+  grid-template-columns: var(--art-size) minmax(0, 1fr) var(--visualizer-width);
   align-items: center;
   gap: var(--widget-gap);
   padding: var(--widget-padding-y) var(--widget-padding-x);
@@ -667,7 +672,7 @@ body.widget-mode {
 }
 
 .widget--no-art {
-  grid-template-columns: minmax(0, 1fr) 28px;
+  grid-template-columns: minmax(0, 1fr) var(--visualizer-width);
 }
 
 .widget--no-visualizer {
@@ -791,7 +796,7 @@ body.widget-mode {
   align-items: end;
   justify-content: center;
   gap: 3px;
-  width: calc(var(--visualizer-bar-width) * 4 + 9px);
+  width: var(--visualizer-width);
   height: var(--visualizer-height);
 }
 
